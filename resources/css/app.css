@@ -9,7 +9,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-brand-forest: #245c45;
+    --color-brand-deep: #173f32;
+    --color-brand-ivory: #faf8f2;
+    --color-brand-coral: #f28c75;
+    --color-brand-dark: #202820;
+    --color-brand-muted: #69736b;
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -23,16 +30,16 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    --color-accent: #245c45;
+    --color-accent-content: #245c45;
+    --color-accent-foreground: #ffffff;
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: #245c45;
+        --color-accent-content: #245c45;
+        --color-accent-foreground: #ffffff;
     }
 }
 
@@ -61,6 +68,122 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+/* Auth form typography: bold green text input & crisp labels */
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"],
+.auth-form [data-flux-control] {
+    color: #245c45 !important;
+    font-weight: 700 !important;
+}
+
+.auth-form [data-flux-label],
+.auth-form label {
+    color: #173f32 !important;
+    font-weight: 700 !important;
+}
+
+.auth-form input::placeholder {
+    color: #8c978e !important;
+    font-weight: 400 !important;
+}
+
+/* Customer Portal & Dashboard Warm Ivory Theme Alignment */
+html:not(.dark) ui-sidebar,
+html:not(.dark) [data-flux-sidebar],
+.customer-portal ui-sidebar,
+.customer-portal [data-flux-sidebar] {
+    background-color: var(--color-brand-ivory) !important;
+    border-color: rgba(32, 40, 32, 0.1) !important;
+}
+
+html:not(.dark) ui-main,
+html:not(.dark) [data-flux-main],
+.customer-portal ui-main,
+.customer-portal [data-flux-main] {
+    background-color: var(--color-brand-ivory) !important;
+}
+
+html:not(.dark) ui-sidebar [data-flux-sidebar-brand],
+.customer-portal ui-sidebar [data-flux-sidebar-brand] {
+    color: var(--color-brand-deep) !important;
+}
+
+html:not(.dark) ui-sidebar [data-flux-sidebar-group-heading],
+.customer-portal ui-sidebar [data-flux-sidebar-group-heading] {
+    color: var(--color-brand-muted) !important;
+    font-size: 0.725rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+html:not(.dark) ui-sidebar a:not([data-current]),
+html:not(.dark) ui-sidebar button:not([data-current]),
+.customer-portal ui-sidebar a:not([data-current]),
+.customer-portal ui-sidebar button:not([data-current]) {
+    color: var(--color-brand-dark) !important;
+}
+
+html:not(.dark) ui-sidebar a:not([data-current]):hover,
+html:not(.dark) ui-sidebar button:not([data-current]):hover,
+.customer-portal ui-sidebar a:not([data-current]):hover,
+.customer-portal ui-sidebar button:not([data-current]):hover {
+    background-color: rgba(36, 92, 69, 0.08) !important;
+    color: var(--color-brand-deep) !important;
+}
+
+html:not(.dark) ui-sidebar a:not([data-current]) svg,
+html:not(.dark) ui-sidebar button:not([data-current]) svg,
+.customer-portal ui-sidebar a:not([data-current]) svg,
+.customer-portal ui-sidebar button:not([data-current]) svg {
+    color: var(--color-brand-muted) !important;
+}
+
+html:not(.dark) ui-sidebar a:not([data-current]):hover svg,
+html:not(.dark) ui-sidebar button:not([data-current]):hover svg,
+.customer-portal ui-sidebar a:not([data-current]):hover svg,
+.customer-portal ui-sidebar button:not([data-current]):hover svg {
+    color: var(--color-brand-forest) !important;
+}
+
+html:not(.dark) ui-sidebar a[data-current="data-current"],
+html:not(.dark) ui-sidebar a[data-current="true"],
+html:not(.dark) ui-sidebar a[data-current],
+.customer-portal ui-sidebar a[data-current="data-current"],
+.customer-portal ui-sidebar a[data-current="true"],
+.customer-portal ui-sidebar a[data-current] {
+    background-color: rgba(36, 92, 69, 0.1) !important;
+    color: var(--color-brand-deep) !important;
+    border-left: 3px solid var(--color-brand-forest) !important;
+    border-color: rgba(36, 92, 69, 0.2) !important;
+    font-weight: 700 !important;
+}
+
+html:not(.dark) ui-sidebar a[data-current] svg,
+.customer-portal ui-sidebar a[data-current] svg {
+    color: var(--color-brand-forest) !important;
+}
+
+html:not(.dark) [data-flux-sidebar-profile],
+.customer-portal [data-flux-sidebar-profile] {
+    color: var(--color-brand-dark) !important;
+}
+
+html:not(.dark) [data-flux-sidebar-profile]:hover,
+.customer-portal [data-flux-sidebar-profile]:hover {
+    background-color: rgba(36, 92, 69, 0.08) !important;
+}
+
+html:not(.dark) [data-flux-menu],
+.customer-portal [data-flux-menu] {
+    background-color: #ffffff !important;
+    border-color: rgba(32, 40, 32, 0.1) !important;
+    color: var(--color-brand-dark) !important;
+}
+
+html:not(.dark) [data-flux-menu-item]:hover,
+.customer-portal [data-flux-menu-item]:hover {
+    background-color: rgba(36, 92, 69, 0.08) !important;
+    color: var(--color-brand-deep) !important;
+}

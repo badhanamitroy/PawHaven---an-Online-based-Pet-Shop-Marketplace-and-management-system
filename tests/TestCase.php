@@ -2,11 +2,26 @@
 
 namespace Tests;
 
+use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SettingsService::resetCache();
+    }
+
+    protected function tearDown(): void
+    {
+        SettingsService::resetCache();
+
+        parent::tearDown();
+    }
+
     protected function skipUnlessFortifyHas(string $feature, ?string $message = null): void
     {
         if (! Features::enabled($feature)) {

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\LoginOtpMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -27,6 +29,7 @@ class TwoFactorChallengeTest extends TestCase
 
     public function test_two_factor_challenge_can_be_rendered(): void
     {
+        Mail::fake();
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
@@ -37,6 +40,17 @@ class TwoFactorChallengeTest extends TestCase
         $this->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('two-factor.login'));
+        ])->assertRedirect(route('login.otp.show'));
+
+        $code = null;
+        Mail::assertSent(LoginOtpMail::class, function (LoginOtpMail $mail) use ($user, &$code): bool {
+            $code = $mail->otp;
+
+            return $mail->hasTo($user->email);
+        });
+
+        $this->post(route('login.otp.verify'), ['code' => $code])
+            ->assertRedirect(route('two-factor.login'));
+        $this->assertGuest();
     }
 }

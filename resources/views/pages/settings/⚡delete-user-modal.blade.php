@@ -5,7 +5,8 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     use PasswordValidationRules;
 
     public string $password = '';
@@ -19,7 +20,15 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $user = Auth::user();
+
+        if ($user->petListings()->exists()) {
+            $this->addError('listings', __('You cannot delete your account while you own pet listings. Resolve or transfer your listings first.'));
+
+            return;
+        }
+
+        tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
     }
@@ -36,6 +45,10 @@ new class extends Component {
         </div>
 
         <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
+
+        @error('listings')
+            <flux:text class="text-red-600">{{ $message }}</flux:text>
+        @enderror
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>

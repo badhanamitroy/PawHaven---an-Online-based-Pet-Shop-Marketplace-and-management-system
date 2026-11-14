@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Http\Responses;
+
+use Illuminate\Http\Request;
+use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
+use Symfony\Component\HttpFoundation\Response;
+
+class LogoutResponse implements LogoutResponseContract
+{
+    public function toResponse($request): Response
+    {
+        return $request->wantsJson()
+            ? response()->noContent()
+            : redirect()->route('public.home');
+    }
+}

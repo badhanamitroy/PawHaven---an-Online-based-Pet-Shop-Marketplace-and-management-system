@@ -1,41 +1,67 @@
+@php
+    $isSeller = request()->routeIs('seller.*');
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $isSeller ? 'dark' : 'h-full bg-[#FAF8F2]' }}">
     <head>
         @include('partials.head')
+        @if(!$isSeller)
+            <script>
+                try { localStorage.setItem('flux.appearance', 'light'); } catch (e) {}
+                document.documentElement.classList.remove('dark');
+                const observer = new MutationObserver(() => {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                    }
+                });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            </script>
+        @endif
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen {{ $isSeller ? 'bg-white dark:bg-zinc-800' : 'customer-portal bg-[#FAF8F2] text-[#202820] font-sans antialiased selection:bg-[#245C45] selection:text-white' }}">
+        <flux:sidebar sticky collapsible="mobile" class="{{ $isSeller ? 'border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900' : 'border-e border-[#202820]/10 bg-[#FAF8F2] text-[#202820]' }}">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                <flux:sidebar.group :heading="__('PawHaven Platform')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                        {{ __('My Dashboard') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="globe-alt" :href="route('public.home')">
+                        {{ __('Public Home') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="magnifying-glass" :href="route('public.home') . '#find-pets'">
+                        {{ __('Find Pets') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="shopping-bag" :href="route('public.home') . '#pet-shop'">
+                        {{ __('Pet Shop') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="heart" :href="route('public.home') . '#adoption-rescue'">
+                        {{ __('Adoption & Rescue') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="computer-desktop" :href="route('devices.index')">
+                        {{ __('Active devices') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
-            </flux:sidebar.nav>
 
-            <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
+                @if(auth()->user()?->isAdmin() || auth()->user()?->isStaff() || auth()->user()?->isSeller())
+                    <flux:sidebar.group :heading="auth()->user()->isAdmin() ? __('Administration') : __('Shop Operations')" class="grid mt-4">
+                        <flux:sidebar.item icon="shield-check" :href="route('admin.dashboard')">
+                            {{ auth()->user()->isAdmin() ? __('Admin Dashboard') : __('Seller Dashboard') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+        <flux:header class="lg:hidden {{ $isSeller ? '' : 'border-b border-[#202820]/10 bg-[#FAF8F2]' }}">
+            <flux:sidebar.toggle class="lg:hidden {{ $isSeller ? '' : 'text-[#173F32]' }}" icon="bars-2" inset="left" />
 
             <flux:spacer />
 

@@ -2,14 +2,25 @@
 
 namespace App\Providers;
 
+use App\Actions\Fortify\AuthenticateWithoutLegacyRecaller;
 use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\RedirectIfTwoFactorAuthenticatable;
+use App\Actions\Fortify\RejectPrivilegedFortifyLogin;
 use App\Actions\Fortify\ResetUserPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Actions\CanonicalizeUsername;
+use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
+use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\LogoutResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse;
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Passkeys;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -18,7 +29,25 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            LoginResponse::class,
+            \App\Http\Responses\LoginResponse::class
+        );
+
+        $this->app->singleton(
+            LogoutResponse::class,
+            \App\Http\Responses\LogoutResponse::class
+        );
+
+        $this->app->singleton(
+            RegisterResponse::class,
+            \App\Http\Responses\RegisterResponse::class
+        );
+
+        $this->app->singleton(
+            TwoFactorLoginResponse::class,
+            \App\Http\Responses\TwoFactorLoginResponse::class
+        );
     }
 
     /**
@@ -26,6 +55,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Passkeys::authorizeLoginUsing(static fn ($request, $user, $passkey): bool => false);
+
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
@@ -38,6 +69,14 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+        Fortify::authenticateThrough(fn (): array => [
+            config('fortify.limiters.login') ? null : EnsureLoginIsNotThrottled::class,
+            CanonicalizeUsername::class,
+            RejectPrivilegedFortifyLogin::class,
+            RedirectIfTwoFactorAuthenticatable::class,
+            AuthenticateWithoutLegacyRecaller::class,
+            PrepareAuthenticatedSession::class,
+        ]);
     }
 
     /**
