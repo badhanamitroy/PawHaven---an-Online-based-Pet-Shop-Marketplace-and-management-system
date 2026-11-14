@@ -229,6 +229,22 @@ Start Laravel in another terminal:
 php artisan serve
 ```
 
+### Queues and scheduled tasks
+
+The example environment and queue configuration use the `database` queue connection. The queue tables are included in the standard migrations. When the application has queued work to process, run a worker in a separate terminal:
+
+```bash
+php artisan queue:work
+```
+
+The application currently registers one scheduled task: `device-sessions:prune`, which runs daily to remove device-session records past their retention period. For local development, keep Laravel's scheduler running in a separate terminal:
+
+```bash
+php artisan schedule:work
+```
+
+In production, configure the host scheduler to invoke `php artisan schedule:run` once per minute from the Laravel project directory. The scheduler only runs tasks that are due; it does not replace a queue worker for database-backed queued jobs.
+
 ## Environment configuration
 
 The application reads configuration through Laravel's `.env` file. Set values locally and keep `.env` out of version control.
