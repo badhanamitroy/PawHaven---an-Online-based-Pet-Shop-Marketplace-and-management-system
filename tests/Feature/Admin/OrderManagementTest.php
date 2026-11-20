@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\Support\CreatesBusinessMemberships;
 use Tests\TestCase;
 
@@ -40,37 +41,35 @@ class OrderManagementTest extends TestCase
             'total_minor' => 3500,
         ]);
 
-        // 1. Invalid jump: Pending directly to Delivered
+        // Pending orders cannot skip confirmation and the fulfilment sequence.
         $invalidResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
             'status' => 'delivered',
+            'submission_key' => (string) Str::uuid(),
         ]);
-        $invalidResponse->assertSessionHas('error');
+        $invalidResponse->assertSessionHasErrors('action');
         $order->refresh();
         $this->assertSame(OrderStatus::Pending, $order->status);
 
-        // 2. Valid transition: Pending to Processing
+        // Confirmation also establishes the delivery method used by later actions.
         $validResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
             'status' => 'processing',
+            'delivery_method' => 'external_courier',
+            'submission_key' => (string) Str::uuid(),
         ]);
         $validResponse->assertRedirect(route('admin.orders.show', $order));
         $validResponse->assertSessionHas('success');
         $order->refresh();
         $this->assertSame(OrderStatus::Processing, $order->status);
 
-        // 3. Valid transition: Processing to Shipped
+        // The compatibility endpoint cannot skip picking, packing, and readiness.
         $shippedResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
             'status' => 'shipped',
+            'submission_key' => (string) Str::uuid(),
         ]);
+        $shippedResponse->assertSessionHasErrors('action');
         $order->refresh();
-        $this->assertSame(OrderStatus::Shipped, $order->status);
-
-        // 4. Valid transition: Shipped to Delivered (and COD marked as Paid)
-        $deliveredResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
-            'status' => 'delivered',
-        ]);
-        $order->refresh();
-        $this->assertSame(OrderStatus::Delivered, $order->status);
-        $this->assertSame(PaymentStatus::Paid, $order->payment_status);
+        $this->assertSame(OrderStatus::Processing, $order->status);
+        $this->assertSame(PaymentStatus::Pending, $order->payment_status);
 
         // 5. Audit log recorded
         $this->assertDatabaseHas('admin_audit_logs', [
@@ -104,12 +103,14 @@ class OrderManagementTest extends TestCase
         $missingReasonResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
             'status' => 'cancelled',
             'cancelled_reason' => '',
+            'submission_key' => (string) Str::uuid(),
         ]);
-        $missingReasonResponse->assertSessionHasErrors(['cancelled_reason']);
+        $missingReasonResponse->assertSessionHasErrors(['note']);
 
         $validCancelResponse = $this->actingAs($staff)->patch(route('admin.orders.update-status', $order), [
             'status' => 'cancelled',
             'cancelled_reason' => 'Customer requested order cancellation before packaging.',
+            'submission_key' => (string) Str::uuid(),
         ]);
         $order->refresh();
         $this->assertSame(OrderStatus::Cancelled, $order->status);
@@ -163,6 +164,7 @@ class OrderManagementTest extends TestCase
         $this->actingAs($owner)->patch(route('admin.orders.update-status', $order), [
             'status' => 'cancelled',
             'cancelled_reason' => 'Customer cancellation.',
+            'submission_key' => (string) Str::uuid(),
         ])->assertRedirect(route('admin.orders.show', $order));
 
         $this->assertSame(5, $product->fresh()->stock_quantity);
@@ -214,6 +216,7 @@ class OrderManagementTest extends TestCase
         $this->actingAs($owner)->patch(route('admin.orders.update-status', $order), [
             'status' => 'cancelled',
             'cancelled_reason' => 'Historical order cancelled.',
+            'submission_key' => (string) Str::uuid(),
         ]);
 
         $this->assertSame(3, $product->fresh()->stock_quantity);

@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0  
 **Effective Date:** October 30, 2026  
-**Audited Location:** `D:\PawHaven\PH Web Version\WebApp`  
+**Audited Location:** `<project-root>`
 **Platform Classification:** Self-Hosted, Source-Code-Licensed Pet Commerce & Community Platform (Non-SaaS, Zero Veterinary/Medical Features)  
 
 ---

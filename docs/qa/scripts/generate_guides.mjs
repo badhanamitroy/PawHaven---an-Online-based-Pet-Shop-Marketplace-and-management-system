@@ -1,10 +1,12 @@
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const WEBAPP_ROOT = 'D:\\PawHaven\\PH Web Version\\WebApp';
-const REPO_ROOT = 'D:\\PawHaven';
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const WEBAPP_ROOT = path.resolve(SCRIPT_DIR, '../../..');
+const REPO_ROOT = path.resolve(WEBAPP_ROOT, '..', '..');
+const CHROME_PATH = process.env.CHROME_PATH;
 
 function getBase64Image(relPath) {
     const fullPath = path.join(WEBAPP_ROOT, relPath);
@@ -219,7 +221,7 @@ function buildAdminGuideHtml() {
                     <tr><td class="label">Software Architecture:</td><td>Laravel 13 • Livewire • Tailwind CSS v4 • SQLite</td></tr>
                     <tr><td class="label">Document Classification:</td><td>Proprietary Store Owner &amp; Administrator Manual</td></tr>
                     <tr><td class="label">Target Audience:</td><td>Source-Code License Buyers, Technical Operators, Store Admins</td></tr>
-                    <tr><td class="label">Testing Evidence:</td><td>100% Genuine Chrome Browser QA Suite (53 Verified Captures)</td></tr>
+                    <tr><td class="label">Testing Evidence:</td><td>Historical browser QA captures are available; validate each release independently</td></tr>
                     <tr><td class="label">Document Version:</td><td>2.0 Release Edition (October 2026)</td></tr>
                 </table>
             </div>
@@ -294,9 +296,9 @@ function buildAdminGuideHtml() {
                 <li><strong>Create Public Storage Symlink:</strong> Ensure media uploads and branding assets are publicly reachable:
                     <br><code>php artisan storage:link</code>
                 </li>
-                <li><strong>Bootstrap Initial Administrator Account:</strong> Use the non-interactive artisan command to create your first administrative credential without manual database editing:
-                    <br><code>php artisan admin:create --name="Site Admin" --email="admin@yourdomain.com" --password="StrongPassword123!"</code>
+                <li><strong>Bootstrap Initial Administrator Account:</strong> Run <code>php artisan admin:create</code> and enter the password at the hidden prompt. Passwords are not accepted on the command line.
                 </li>
+                <li><strong>Assign the Initial Shop Owner:</strong> Sign in to the verified Platform Administrator account, then use Admin → Business Management to assign Owner access to the verified account that will run the company. The migration creates the company record but does not assign an Owner automatically.</li>
             </ol>
 
             <div class="alert-box critical">
@@ -780,7 +782,7 @@ async function generatePdfs() {
     console.log('====================================================\n');
 
     const browser = await puppeteer.launch({
-        executablePath: CHROME_PATH,
+        ...(CHROME_PATH ? { executablePath: CHROME_PATH } : {}),
         headless: 'new',
         args: ['--no-sandbox', '--disable-gpu']
     });

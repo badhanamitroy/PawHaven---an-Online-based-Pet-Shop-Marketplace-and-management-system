@@ -1,6 +1,6 @@
 # PawHaven QA Test Environment Specification
 
-This document details the exact hardware, operating system, runtime dependencies, web application configuration, and browser automation harness used during the real Chrome browser QA and security testing of PawHaven.
+This document summarizes the historical local QA environment. It contains no real account identifiers or machine-specific paths. The environment and test claims below have not been independently rerun as part of the current commercial-readiness audit.
 
 ---
 
@@ -10,8 +10,8 @@ This document details the exact hardware, operating system, runtime dependencies
 |:---|:---|:---|
 | **Operating System** | Windows 11 Enterprise (64-bit) | Workstation build |
 | **Shell Environment** | Microsoft PowerShell 7 / Windows PowerShell | Windows native pathing |
-| **Workspace Root** | `D:\PawHaven\PH Web Version\WebApp` | Project installation directory |
-| **Repository Root** | `D:\PawHaven` | Root documentation & logos repository |
+| **Workspace Root** | `<project-root>` | Use the directory where PawHaven is installed |
+| **Repository Root** | `<repository-root>` | Use the checked-out source directory |
 
 ---
 
@@ -19,13 +19,13 @@ This document details the exact hardware, operating system, runtime dependencies
 
 | Component | Version | Configuration Details |
 |:---|:---|:---|
-| **PHP Runtime** | PHP 8.5.0-dev (CLI/CGI) | Extensions: OpenSSL, PDO, PDO_SQLite, cURL, MBString |
+| **PHP Runtime** | PHP 8.5.0 (CLI/CGI) | Extensions observed: OpenSSL, PDO, PDO_SQLite, cURL, MBString |
 | **Laravel Framework** | Laravel 13.x | Full MVC, Fortify auth, Livewire reactive UI |
 | **Frontend Tooling** | Vite Plus (`vite.config.js`) | Tailwind CSS v4, Flux UI, ES Module bundling |
 | **Database Engine** | SQLite 3 | `database/database.sqlite` (WAL journaling mode) |
 | **Cache Driver** | Database (`cache` table) | Persistent multi-process cache |
 | **Session Driver** | Database (`sessions` table) | Encrypted HTTP-only cookies (`pawhaven-session`) |
-| **Mail Driver** | SMTP (`smtp.gmail.com:587`) | TLS encryption enabled |
+| **Mail Driver** | SMTP | Use a provider and credentials configured for the deployment; secret values are intentionally omitted |
 
 ---
 
@@ -33,22 +33,24 @@ This document details the exact hardware, operating system, runtime dependencies
 
 | Component | Specification | Purpose |
 |:---|:---|:---|
-| **Browser Binary** | Google Chrome `131.0.6778.x` | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
-| **Automation Engine** | `puppeteer-core` v24.x | Direct Chrome DevTools Protocol (CDP) orchestration |
-| **Viewports Tested** | • Desktop: `1440x900` (16:10)<br>• Tablet: `768x1024` (3:4 portrait)<br>• Mobile: `375x812` (iPhone-class portrait) | Full responsive layout validation |
-| **Local Web Server** | `php artisan serve --port=8000` | Single-threaded built-in web server listening on `127.0.0.1:8000` |
+| **Browser Binary** | Chromium-based browser | Set `CHROME_PATH` for the local browser executable when needed |
+| **Automation Engine** | `puppeteer-core` | Browser automation via Chrome DevTools Protocol (CDP) |
+| **Viewports Tested** | Desktop, tablet, and mobile sizes were used in earlier QA | This historical statement is not a current regression result |
+| **Local Web Server** | `php artisan serve --port=8000` | Local development only; no network-level smoke test was completed in the current audit |
+
+The QA scripts read `CHROME_PATH`, optional `PAWHAVEN_QA_BASE_URL`, and role-specific `PAWHAVEN_QA_ADMIN_EMAIL` / `PAWHAVEN_QA_ADMIN_PASSWORD`, `PAWHAVEN_QA_CUSTOMER_EMAIL` / `PAWHAVEN_QA_CUSTOMER_PASSWORD`, and `PAWHAVEN_QA_SELLER_EMAIL` / `PAWHAVEN_QA_SELLER_PASSWORD` from the local process environment. Supply isolated synthetic test accounts; never place real credentials in scripts, logs, or source control.
 
 ---
 
 ## 4. Test Accounts & Credential Topology
 
-| Role | Email Address | Verification State | 2FA State | Primary Purpose |
+| Role | Account identifier | Verification state | 2FA state | Primary purpose |
 |:---|:---|:---:|:---:|:---|
-| **Administrator** | `badhanamitroy571@gmail.com` | Verified | Enforced (Email OTP) | Platform management, Website Manager, Moderation |
-| **Seller** | `seller@pawhaven.com` | Verified | Optional | Commercial pet inventory, order request fulfillment |
-| **Customer** | `customer@pawhaven.com` | Verified | Optional | Marketplace exploration, purchase order requests |
-| **Test Seller** | `badhanamitroy2nd@gmail.com` | Unverified (Registered during QA) | Checkpoint Enforced | Human-in-the-loop registration flow testing |
-| **Test Customer** | `badhancse28@gmail.com` | Unverified (Registered during QA) | Checkpoint Enforced | Human-in-the-loop registration flow testing |
+| **Administrator** | Omitted | Verified in the historical environment | Email OTP | Platform management |
+| **Marketplace Seller** | Omitted | Verified in the historical environment | Optional | Marketplace listing workflow |
+| **Customer** | Omitted | Verified in the historical environment | Optional | Marketplace buyer workflow |
+| **Test Seller** | Omitted | Unverified test account | Registration checkpoint | Registration flow |
+| **Test Customer** | Omitted | Unverified test account | Registration checkpoint | Registration flow |
 
 > [!NOTE]
-> All passwords and secret tokens adhere to strict security masking policies and are never exposed in terminal logs, source control, test reports, or generated user guides.
+> Do not store real account email addresses, passwords, tokens, or other personal data in QA documentation or generated guides. Use isolated synthetic test accounts.

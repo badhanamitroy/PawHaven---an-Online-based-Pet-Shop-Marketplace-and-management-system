@@ -21,7 +21,7 @@ class MarketplaceSeeder extends Seeder
             return;
         }
 
-        $seller = User::where('email', 'seller@pawhaven.com')->first();
+        $seller = User::where('email', 'seller@example.test')->first();
         if (! $seller) {
             return;
         }

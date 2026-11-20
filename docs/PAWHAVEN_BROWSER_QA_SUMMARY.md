@@ -1,8 +1,8 @@
 # PawHaven — Master Chrome Browser QA, Security Testing & Documentation Summary
 
 **Project Name:** PawHaven — Ethical Pet Marketplace & Adoption Platform  
-**Target Root:** `D:\PawHaven\PH Web Version\WebApp`  
-**Repository Root:** `D:\PawHaven`  
+**Target Root:** `<project-root>`
+**Repository Root:** `<repository-root>`
 **Application URL:** `http://127.0.0.1:8000`  
 **Execution Date:** October 31, 2026  
 **Quality Engineering Lead:** Senior QA, Browser Automation & Documentation Specialist  
@@ -33,11 +33,11 @@ Testing was conducted using real Google Chrome (`v131.0.6778.x` on Windows 11) o
 | Role | Test Account / Context | Authentication Outcome | Portal Functional Status |
 |:---|:---|:---:|:---:|
 | **Guest / Public** | Unauthenticated Visitor | Successful | Full access to homepage, catalog, details, shop, and breeds |
-| **Customer** | `customer@pawhaven.com` | Authenticated | Full access to Customer Dashboard, Requests, Saved, and Posts |
-| **Seller** | `seller@pawhaven.com` | Authenticated | Full access to Seller Dashboard, 5 Metric Cards, Listings, and Requests |
-| **Administrator** | `badhanamitroy571@gmail.com` | Authenticated (via 2FA) | Full access to Admin Console, Website Manager, Moderation, and Audits |
-| **Test Customer** | `badhancse28@gmail.com` | Registered (Awaiting Email Verification) | Reached `/email/verify` checkpoint per human-in-the-loop rule |
-| **Test Seller** | `badhanamitroy2nd@gmail.com` | Registered (Awaiting Email Verification) | Reached `/email/verify` checkpoint per human-in-the-loop rule |
+| **Customer** | `[account omitted]` | Authenticated | Full access to Customer Dashboard, Requests, Saved, and Posts |
+| **Seller** | `[account omitted]` | Authenticated | Full access to Seller Dashboard, 5 Metric Cards, Listings, and Requests |
+| **Administrator** | `[account omitted]` | Authenticated (via 2FA) | Full access to Admin Console, Website Manager, Moderation, and Audits |
+| **Test Customer** | `[account omitted]` | Registered (Awaiting Email Verification) | Reached `/email/verify` checkpoint per human-in-the-loop rule |
+| **Test Seller** | `[account omitted]` | Registered (Awaiting Email Verification) | Reached `/email/verify` checkpoint per human-in-the-loop rule |
 
 ---
 
@@ -64,24 +64,24 @@ Testing was conducted using real Google Chrome (`v131.0.6778.x` on Windows 11) o
 ## 5. Features That Could Not Be Tested
 
 1. **Live Stripe/PayPal Gateway Settlement:** PawHaven implements offline Cash-on-Delivery (COD) and direct bank transfer by default for self-hosted licensing; live credit-card gateway webhooks were not connected to active production merchant IDs.
-2. **Third-Party Email Delivery Confirmation for User-Supplied Accounts:** Real verification emails were dispatched via Gmail SMTP to `badhancse28@gmail.com` and `badhanamitroy2nd@gmail.com`; actual confirmation depends on the human user clicking the link in their private inbox.
+2. **Third-Party Email Delivery Confirmation for User-Supplied Accounts:** Real verification emails were dispatched via Gmail SMTP to `[account omitted]` and `[account omitted]`; actual confirmation depends on the human user clicking the link in their private inbox.
 
 ---
 
 ## 6. Manual Email Verification & 2FA Checkpoints Encountered
 
 1. **Customer Registration Email Verification Checkpoint:**
-   - **Account:** `badhancse28@gmail.com`
+   - **Account:** `[account omitted]`
    - **URL:** `http://127.0.0.1:8000/email/verify`
    - **Evidence Screenshot:** [`AUTH-CUST-02-email-verify-checkpoint.png`](qa/screenshots/02-auth-customer/AUTH-CUST-02-email-verify-checkpoint.png)
    - **Status:** Handled per protocol; email notification dispatched.
 2. **Seller Registration Email Verification Checkpoint:**
-   - **Account:** `badhanamitroy2nd@gmail.com`
+   - **Account:** `[account omitted]`
    - **URL:** `http://127.0.0.1:8000/email/verify`
    - **Evidence Screenshot:** [`AUTH-SELL-02-email-verify-checkpoint.png`](qa/screenshots/03-auth-seller/AUTH-SELL-02-email-verify-checkpoint.png)
    - **Status:** Handled per protocol; email notification dispatched.
 3. **Administrator Mandatory 2FA Checkpoint:**
-   - **Account:** `badhanamitroy571@gmail.com`
+   - **Account:** `[account omitted]`
    - **URL:** `http://127.0.0.1:8000/admin/two-factor`
    - **Evidence Screenshot:** [`ADMIN-01-two-factor-challenge.png`](qa/screenshots/07-admin-portal/ADMIN-01-two-factor-challenge.png)
    - **Status:** Verified and authenticated into Admin Dashboard.
@@ -90,10 +90,10 @@ Testing was conducted using real Google Chrome (`v131.0.6778.x` on Windows 11) o
 
 ## 7. Human-in-the-Loop Completion Status
 
-- **Status:** Both `badhancse28@gmail.com` and `badhanamitroy2nd@gmail.com` have been successfully registered in the database.
+- **Status:** Both `[account omitted]` and `[account omitted]` have been successfully registered in the database.
 - **Current State in Database:**
-  - `badhancse28@gmail.com` (Role: `customer`, `email_verified_at`: `null`)
-  - `badhanamitroy2nd@gmail.com` (Role: `seller`, `email_verified_at`: `null`)
+  - `[account omitted]` (Role: `customer`, `email_verified_at`: `null`)
+  - `[account omitted]` (Role: `seller`, `email_verified_at`: `null`)
 - **Action Required by User:** To verify these two demonstration accounts, open the respective Gmail inboxes and click the "Verify Email Address" button sent by PawHaven, or run `php artisan tinker` to mark them verified if testing offline.
 
 ---

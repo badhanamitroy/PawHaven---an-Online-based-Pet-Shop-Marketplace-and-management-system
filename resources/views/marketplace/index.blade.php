@@ -311,7 +311,7 @@
                                             </span>
                                             <span class="text-base font-bold text-[#173F32]">
                                                 @if($listing->listing_type === \App\Enums\PetListingType::Sale && $listing->price_minor)
-                                                    ${{ number_format($listing->price_minor / 100, 2) }}
+                                                    {{ $listing->currency }} {{ number_format($listing->price_minor / 100, 2) }}
                                                 @else
                                                     <span class="text-[#245C45] font-semibold text-xs">No Sale Fee</span>
                                                 @endif

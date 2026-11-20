@@ -9,6 +9,7 @@ use App\Enums\PetListingType;
 use App\Facades\Settings;
 use App\Models\Breed;
 use App\Models\Order;
+use App\Models\PaymentTransaction;
 use App\Models\PetCategory;
 use App\Models\PetListing;
 use App\Models\User;
@@ -222,12 +223,12 @@ class EndToEndIntegrationJourneysTest extends TestCase
         ])->assertRedirect();
         $this->assertEquals(OrderStatus::Shipped, $order->fresh()->status);
 
-        // 5. Seller confirms final handover (Shipped -> Delivered, auto-sets COD payment to Paid)
+        // 5. Seller confirms final handover (Shipped -> Delivered); delivery is not payment evidence.
         $this->actingAs($this->seller)->patch(route('seller.requests.status', $order), [
             'status' => 'delivered',
         ])->assertRedirect();
         $this->assertEquals(OrderStatus::Delivered, $order->fresh()->status);
-        $this->assertEquals(PaymentStatus::Paid, $order->fresh()->payment_status);
+        $this->assertEquals(PaymentStatus::Pending, $order->fresh()->payment_status);
 
         // 6. Seller records payment receipt reference
         $this->actingAs($this->seller)->patch(route('seller.requests.payment', $order), [
@@ -235,6 +236,7 @@ class EndToEndIntegrationJourneysTest extends TestCase
             'payment_reference' => 'COD-CASH-CONFIRMED-800',
         ])->assertRedirect();
         $this->assertEquals('COD-CASH-CONFIRMED-800', $order->fresh()->payment_reference);
+        $this->assertSame('verified', PaymentTransaction::query()->where('order_id', $order->id)->sole()->status->value);
     }
 
     /**

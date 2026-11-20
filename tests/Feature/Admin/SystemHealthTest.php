@@ -24,7 +24,9 @@ class SystemHealthTest extends TestCase
         $response->assertSee('Application Stack');
         $response->assertSee('Database Engine');
         $response->assertSee('Media Storage');
-        $response->assertSee('Zero SaaS Storage');
+        $response->assertSee('Application Schema');
+        $response->assertSee('Migration History');
+        $response->assertSee('Operational Readiness Notes');
     }
 
     public function test_staff_cannot_access_system_health(): void

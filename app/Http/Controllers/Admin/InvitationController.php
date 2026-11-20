@@ -23,17 +23,18 @@ class InvitationController extends Controller
 
     public function index(Request $request): View
     {
-        $this->authorizeInvitationList($request->user());
-        $query = Invitation::query()
-            ->with(['branch', 'company', 'invitedBy', 'acceptedUser'])
-            ->latest();
+        $user = $request->user();
+        $this->authorizeInvitationList($user);
 
-        if ($request->user()->isAdmin()) {
-            $query->where('role', 'seller');
+        if ($user->isAdmin()) {
+            $scope = Invitation::query()->where('role', 'seller');
         } else {
             $company = app(BusinessAccessService::class)->installationCompany();
-            $query->where('company_id', $company->id)->whereIn('role', ['manager', 'branch_manager']);
+            $scope = Invitation::query()->where('company_id', $company->id)
+                ->whereIn('role', ['manager', 'branch_manager']);
         }
+
+        $query = (clone $scope)->with(['branch', 'company', 'invitedBy', 'acceptedUser'])->latest();
 
         if ($request->filled('role')) {
             $role = $request->input('role');
@@ -65,11 +66,11 @@ class InvitationController extends Controller
 
         $invitations = $query->paginate(15)->withQueryString();
 
-        $totalCount = Invitation::count();
-        $pendingCount = Invitation::query()->whereNull('accepted_at')->whereNull('revoked_at')->where('expires_at', '>', now())->count();
-        $acceptedCount = Invitation::query()->whereNotNull('accepted_at')->count();
-        $sellerCount = Invitation::query()->where('role', 'seller')->count();
-        $managerCount = Invitation::query()->whereIn('role', ['manager', 'branch_manager'])->count();
+        $totalCount = (clone $scope)->count();
+        $pendingCount = (clone $scope)->whereNull('accepted_at')->whereNull('revoked_at')->where('expires_at', '>', now())->count();
+        $acceptedCount = (clone $scope)->whereNotNull('accepted_at')->count();
+        $sellerCount = (clone $scope)->where('role', 'seller')->count();
+        $managerCount = (clone $scope)->whereIn('role', ['manager', 'branch_manager'])->count();
 
         return view('admin.invitations.index', compact(
             'invitations',

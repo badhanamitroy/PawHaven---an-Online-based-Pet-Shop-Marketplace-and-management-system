@@ -146,7 +146,7 @@
 
                     <div>
                         <label for="price" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                            Price ($ USD) <span x-show="type === 'sale'" class="text-rose-500">*</span>
+                            Price ({{ $listing->currency }}) <span x-show="type === 'sale'" class="text-rose-500">*</span>
                         </label>
                         <input
                             type="number"

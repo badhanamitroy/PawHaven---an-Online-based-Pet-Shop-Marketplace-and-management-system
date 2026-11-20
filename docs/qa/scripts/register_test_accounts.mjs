@@ -1,11 +1,10 @@
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 import path from 'path';
+import { BASE_URL, CHROME_PATH, qaCredentials, REPO_ROOT, WEBAPP_ROOT } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
-const WEBAPP_ROOT = 'D:\\PawHaven\\PH Web Version\\WebApp';
-const REPO_ROOT = 'D:\\PawHaven';
+const customerCredentials = qaCredentials('customer');
+const sellerCredentials = qaCredentials('seller');
 
 async function capture(page, category, filename, id, description) {
     const webappDir = path.join(WEBAPP_ROOT, 'docs', 'qa', 'screenshots', category);
@@ -32,13 +31,13 @@ async function run() {
         const page = await browser.newPage();
         await page.setViewport({ width: 1440, height: 900 });
 
-        // 1. Customer Registration with badhancse28@gmail.com
-        console.log('Registering Customer badhancse28@gmail.com ...');
+        // 1. Customer registration using locally supplied QA credentials.
+        console.log('Registering the configured QA customer account ...');
         await page.goto(`${BASE_URL}/register?role=customer`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="name"]', 'Badhan Customer');
-        await page.type('input[name="email"]', 'badhancse28@gmail.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
-        await page.type('input[name="password_confirmation"]', 'CustomerPassword123!');
+        await page.type('input[name="name"]', 'QA Customer');
+        await page.type('input[name="email"]', customerCredentials.email);
+        await page.type('input[name="password"]', customerCredentials.password);
+        await page.type('input[name="password_confirmation"]', customerCredentials.password);
         
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),
@@ -55,13 +54,13 @@ async function run() {
         });
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
 
-        // 2. Seller Registration with badhanamitroy2nd@gmail.com
-        console.log('Registering Seller badhanamitroy2nd@gmail.com ...');
+        // 2. Seller registration using locally supplied QA credentials.
+        console.log('Registering the configured QA seller account ...');
         await page.goto(`${BASE_URL}/register?role=seller`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="name"]', 'Badhan Seller');
-        await page.type('input[name="email"]', 'badhanamitroy2nd@gmail.com');
-        await page.type('input[name="password"]', 'SellerPassword123!');
-        await page.type('input[name="password_confirmation"]', 'SellerPassword123!');
+        await page.type('input[name="name"]', 'QA Seller');
+        await page.type('input[name="email"]', sellerCredentials.email);
+        await page.type('input[name="password"]', sellerCredentials.password);
+        await page.type('input[name="password_confirmation"]', sellerCredentials.password);
 
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),

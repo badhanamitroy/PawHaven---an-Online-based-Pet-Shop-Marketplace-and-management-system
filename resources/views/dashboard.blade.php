@@ -168,7 +168,7 @@
                                     <div class="text-right">
                                         <div class="text-sm font-bold text-[#202820]">
                                             @if($order->total_minor > 0)
-                                                ${{ number_format($order->total_minor / 100, 2) }}
+                                                {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}
                                             @else
                                                 <span class="text-emerald-700">Free Adoption</span>
                                             @endif
@@ -189,6 +189,65 @@
                                     @endif
                                 </div>
                             </div>
+
+                            @if($order->items->isNotEmpty())
+                                <div class="mt-3 grid gap-1 border-b border-[#202820]/5 pb-3 text-xs text-[#69736B] sm:grid-cols-2">
+                                    <div>Merchandise subtotal after discounts: <span class="font-semibold text-[#202820]">{{ $order->currency }} {{ number_format($order->subtotal_minor / 100, 2) }}</span></div>
+                                    @if(($order->promotion_discount_minor ?? 0) > 0)<div>Promotion discount: <span class="font-semibold text-emerald-700">−{{ $order->currency }} {{ number_format($order->promotion_discount_minor / 100, 2) }}</span></div>@endif
+                                    @if(($order->coupon_discount_minor ?? 0) > 0)<div>Coupon discount: <span class="font-semibold text-emerald-700">−{{ $order->currency }} {{ number_format($order->coupon_discount_minor / 100, 2) }}</span></div>@endif
+                                    <div>Delivery: <span class="font-semibold text-[#202820]">{{ $order->delivery_fee_minor === 0 ? 'Free' : $order->currency.' '.number_format($order->delivery_fee_minor / 100, 2) }}</span></div>
+                                </div>
+                            @endif
+
+                            @if($order->seller_id === null && $order->pet_listing_id === null)
+                                @foreach($order->paymentTransactions as $payment)
+                                    @if($payment->status === \App\Enums\PaymentTransactionStatus::Verified)
+                                        @php
+                                            $refundReserved = $payment->refunds
+                                                ->whereIn('status', [\App\Enums\PaymentRefundStatus::Requested, \App\Enums\PaymentRefundStatus::Refunded])
+                                                ->sum('amount_minor');
+                                        @endphp
+                                        <div class="mt-3 rounded-xl border border-violet-100 bg-violet-50/60 p-3 text-xs">
+                                            <p class="font-semibold text-violet-900">Payment {{ $payment->currency }} {{ number_format($payment->amount_minor / 100, 2) }} · {{ $payment->status->label() }}</p>
+                                            @foreach($payment->refunds as $refund)
+                                                <p class="mt-1 text-[#69736B]">{{ $refund->status->label() }} · {{ $refund->currency }} {{ number_format($refund->amount_minor / 100, 2) }} @if($refund->approved_by_user_id)— reviewed {{ $refund->approved_at?->format('M d, Y') }}@endif</p>
+                                            @endforeach
+                                            @if($payment->amount_minor > $refundReserved)
+                                                <form method="POST" action="{{ route('orders.refunds.store', $order) }}" class="mt-3 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">@csrf<input type="hidden" name="payment_transaction_id" value="{{ $payment->id }}"><input type="hidden" name="refund_submission_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><input name="refund_amount" required inputmode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" placeholder="Amount, max {{ $payment->currency }} {{ number_format(($payment->amount_minor - $refundReserved) / 100, 2) }}" class="rounded-lg border border-violet-200 px-2 py-2"><input name="reason" maxlength="1000" required placeholder="Refund reason" class="rounded-lg border border-violet-200 px-2 py-2"><button class="rounded-lg bg-violet-800 px-3 py-2 font-semibold text-white">Request refund</button></form>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
+
+                            @if($order->seller_id === null && $order->pet_listing_id === null)
+                                @foreach($order->items as $orderItem)
+                                    @if($orderItem->product_id !== null)
+                                        @php
+                                            $returnUsedQuantity = $orderItem->productReturns->sum(fn ($return) => $return->status === \App\Enums\ProductReturnStatus::Received
+                                                ? (int) $return->received_quantity
+                                                : ($return->status === \App\Enums\ProductReturnStatus::Rejected ? 0 : (int) $return->requested_quantity));
+                                            $returnRemainingQuantity = max(0, (int) $orderItem->quantity - $returnUsedQuantity);
+                                        @endphp
+                                        <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-xs">
+                                            <div class="font-semibold text-amber-900">{{ $orderItem->product_name }} · {{ $returnUsedQuantity }}/{{ $orderItem->quantity }} units requested, approved, or received</div>
+                                            @foreach($orderItem->productReturns as $productReturn)
+                                                <p class="mt-1 text-[#69736B]">{{ $productReturn->status->label() }} · {{ $productReturn->requested_quantity }} requested@if($productReturn->received_at) · {{ $productReturn->resellable_quantity }} resellable, {{ $productReturn->damaged_quantity }} damaged/non-resellable received@endif</p>
+                                            @endforeach
+                                            @if($order->status === \App\Enums\OrderStatus::Delivered && $returnRemainingQuantity > 0)
+                                                <form method="POST" action="{{ route('orders.items.returns.store', [$order, $orderItem]) }}" class="mt-2 grid gap-2 sm:grid-cols-[auto_1fr_auto]">@csrf
+                                                    <input type="hidden" name="return_submission_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
+                                                    <label class="sr-only" for="return-quantity-{{ $orderItem->id }}">Return quantity</label>
+                                                    <input id="return-quantity-{{ $orderItem->id }}" type="number" name="return_quantity" min="1" max="{{ $returnRemainingQuantity }}" required placeholder="Qty (max {{ $returnRemainingQuantity }})" class="rounded-lg border border-amber-200 px-2 py-2">
+                                                    <input name="reason" maxlength="1000" required placeholder="Why do you want to return this item?" class="rounded-lg border border-amber-200 px-2 py-2">
+                                                    <button class="rounded-lg bg-amber-700 px-3 py-2 font-semibold text-white">Request return</button>
+                                                </form>
+                                                <p class="mt-2 text-[11px] text-[#69736B]">This request is optional and does not request a refund or change inventory.</p>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
 
                             {{-- Status Timeline & Progress Bar --}}
                             <div class="pt-4">
@@ -225,6 +284,38 @@
                                     </div>
                                 @endif
                             </div>
+
+                            @if($order->company_id !== null && $order->seller_id === null && $order->pet_listing_id === null)
+                                <div class="mt-4 rounded-xl border border-[#245C45]/15 bg-[#FAF8F2]/70 p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#173F32]">Fulfilment tracking</h3>
+                                        @if($order->fulfilment_status)
+                                            <span class="rounded-full bg-[#245C45]/10 px-2.5 py-1 text-[11px] font-semibold text-[#245C45]">{{ $order->fulfilment_status->label() }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="mt-2 space-y-1 text-xs text-[#69736B]">
+                                        @if($order->delivery_method)<p>Method: {{ $order->delivery_method->label() }}</p>@endif
+                                        @if($order->delivery_provider)<p>Delivery provider: {{ $order->delivery_provider }}</p>@endif
+                                        @if($order->tracking_reference)<p>Tracking reference: <span class="font-mono">{{ $order->tracking_reference }}</span></p>@endif
+                                        @if($order->dispatched_at)<p>Dispatched: {{ $order->dispatched_at->format('M d, Y g:i A') }}</p>@endif
+                                        @if($order->out_for_delivery_at)<p>Out for delivery: {{ $order->out_for_delivery_at->format('M d, Y g:i A') }}</p>@endif
+                                        @if($order->delivered_at)<p>Delivered: {{ $order->delivered_at->format('M d, Y g:i A') }}</p>@endif
+                                    </div>
+                                    @if($order->fulfilmentEvents->isNotEmpty())
+                                        <ol class="mt-3 space-y-2 border-l border-[#245C45]/20 pl-3">
+                                            @foreach($order->fulfilmentEvents as $event)
+                                                <li class="text-xs text-[#69736B]">
+                                                    <span class="font-semibold text-[#173F32]">{{ $event->created_at?->format('M d, Y g:i A') }}</span>
+                                                    <span class="block">{{ $event->buyer_message }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ol>
+                                    @endif
+                                    @if($order->fulfilment_status === \App\Enums\FulfilmentStatus::DeliveryFailed && $order->delivery_failed_at)
+                                        <p class="mt-2 text-xs text-amber-800">A delivery attempt was unsuccessful. The shop will review the next step.</p>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @endforeach
 
@@ -287,7 +378,7 @@
                                     </a>
                                     <div class="mt-2 text-xs font-semibold text-[#202820]">
                                         @if($pet->listing_type === \App\Enums\PetListingType::Sale && $pet->price_minor)
-                                            ${{ number_format($pet->price_minor / 100, 2) }}
+                                            {{ $pet->currency }} {{ number_format($pet->price_minor / 100, 2) }}
                                         @else
                                             <span class="text-[#245C45] font-bold">Free Adoption</span>
                                         @endif

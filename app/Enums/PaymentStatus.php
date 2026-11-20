@@ -12,7 +12,7 @@ enum PaymentStatus: string
     {
         return match ($this) {
             self::Pending => 'Pending Collection',
-            self::Paid => 'Paid (Cash on Delivery)',
+            self::Paid => 'Paid',
             self::Refunded => 'Refunded',
         };
     }

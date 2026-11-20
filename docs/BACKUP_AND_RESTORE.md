@@ -38,8 +38,9 @@ tar -czf "$BACKUP_DIR/media_uploads.tar.gz" -C /var/www/pawhaven/storage/app pub
 # 3. Securely copy the environment configuration
 cp /var/www/pawhaven/.env "$BACKUP_DIR/.env"
 
-# 4. Restrict permissions
-chmod -R 600 "$BACKUP_DIR"
+# 4. Restrict permissions without removing directory traversal permissions
+find "$BACKUP_DIR" -type d -exec chmod 700 {} +
+find "$BACKUP_DIR" -type f -exec chmod 600 {} +
 echo "Backup completed successfully at $BACKUP_DIR"
 ```
 
@@ -51,7 +52,7 @@ BACKUP_DIR="/var/backups/pawhaven/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # 1. Dump MySQL Database
-mysqldump -u pawhaven_user -p'your_db_password' \
+mysqldump -u pawhaven_backup -p \
     --single-transaction \
     --quick \
     --lock-tables=false \
@@ -63,8 +64,11 @@ tar -czf "$BACKUP_DIR/media_uploads.tar.gz" -C /var/www/pawhaven/storage/app pub
 # 3. Copy environment configuration
 cp /var/www/pawhaven/.env "$BACKUP_DIR/.env"
 
-chmod -R 600 "$BACKUP_DIR"
+find "$BACKUP_DIR" -type d -exec chmod 700 {} +
+find "$BACKUP_DIR" -type f -exec chmod 600 {} +
 ```
+
+For unattended backups, use a MySQL client option file readable only by the backup account (mode `600`) instead of putting a password in this script, its arguments, or the crontab. For example, configure `mysqldump --defaults-extra-file=/secure/path/pawhaven-backup.cnf ...` and protect the option file and its parent directory.
 
 ---
 
@@ -105,7 +109,7 @@ chmod 664 /var/www/pawhaven/database/database.sqlite
 
 #### For MySQL:
 ```bash
-mysql -u pawhaven_user -p'your_db_password' pawhaven < /var/backups/pawhaven/20261031_023000/pawhaven_db.sql
+mysql -u pawhaven_user -p pawhaven < /var/backups/pawhaven/20261031_023000/pawhaven_db.sql
 ```
 
 ### Step 4: Restore Media Uploads

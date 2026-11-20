@@ -15,7 +15,7 @@
         <div style="font-size: 16px; font-weight: 800; color: #173F32; margin-bottom: 4px;">
             Current Status: {{ $order->status->label() }}
         </div>
-        <div><strong>Order Total:</strong> ${{ number_format($order->total_minor / 100, 2) }}</div>
+        <div><strong>Order Total:</strong> {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}</div>
         <div><strong>Payment:</strong> {{ $order->payment_status->label() }} ({{ strtoupper($order->payment_method) }})</div>
 
         @if($order->cancelled_reason)

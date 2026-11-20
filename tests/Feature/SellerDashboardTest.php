@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\PetCategory;
 use App\Models\PetListing;
 use App\Models\User;
+use App\Models\PaymentTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -223,7 +224,7 @@ class SellerDashboardTest extends TestCase
         $this->assertDatabaseHas('pet_listings', ['id' => $foreignListing->id]);
     }
 
-    public function test_seller_can_progress_order_lifecycle_and_verify_payment(): void
+    public function test_seller_can_progress_order_lifecycle_without_delivery_being_treated_as_payment(): void
     {
         $order = Order::create([
             'order_number' => 'ORD-TEST-100',
@@ -254,12 +255,12 @@ class SellerDashboardTest extends TestCase
             ->assertRedirect();
         $this->assertEquals(OrderStatus::Shipped, $order->fresh()->status);
 
-        // 3. Shipped -> Delivered (which also verifies COD payment to Paid)
+        // 3. Shipped -> Delivered does not imply that cash was received.
         $this->actingAs($this->seller)
             ->patch(route('seller.requests.status', $order), ['status' => 'delivered'])
             ->assertRedirect();
         $this->assertEquals(OrderStatus::Delivered, $order->fresh()->status);
-        $this->assertEquals(PaymentStatus::Paid, $order->fresh()->payment_status);
+        $this->assertEquals(PaymentStatus::Pending, $order->fresh()->payment_status);
 
         // 4. Record payment reference
         $this->actingAs($this->seller)
@@ -269,6 +270,7 @@ class SellerDashboardTest extends TestCase
             ])
             ->assertRedirect();
         $this->assertEquals('IN-PERSON-RECEIPT-99', $order->fresh()->payment_reference);
+        $this->assertSame('verified', PaymentTransaction::query()->where('order_id', $order->id)->sole()->status->value);
     }
 
     public function test_seller_cannot_view_or_progress_another_sellers_orders_idor(): void

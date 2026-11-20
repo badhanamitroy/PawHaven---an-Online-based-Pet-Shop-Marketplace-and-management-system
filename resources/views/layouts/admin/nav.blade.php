@@ -5,6 +5,8 @@
             ? app(\App\Services\BusinessAccessService::class)->activeMemberships($navUser)
             : collect();
         $navIsShopOwner = $navMemberships->contains(fn ($membership) => $membership->role === 'owner');
+        $navIsEmployeeSeller = $navMemberships->contains(fn ($membership) => $membership->role === 'seller');
+        $navIsBranchManager = $navMemberships->contains(fn ($membership) => $membership->role === 'manager');
         $navCanBranchOperations = $navMemberships->contains(fn ($membership) => in_array($membership->role, ['owner', 'manager'], true));
     @endphp
     <ul role="list" class="flex flex-1 flex-col gap-y-6">
@@ -103,6 +105,41 @@
                 @endif
 
                 {{-- Commerce & Customer Orders --}}
+                @if($navIsEmployeeSeller)
+                <li>
+                    <a
+                        href="{{ route('admin.sales-desk.index') }}"
+                        class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sales-desk.*') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}"
+                    >
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6m4 13a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" />
+                        </svg>
+                        <span>Employee Sales Desk</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.sales-reports.my') }}" class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sales-reports.my*') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l4-4 4 4 6-7" /></svg>
+                        <span>My Sales</span>
+                    </a>
+                </li>
+                @endif
+                @if($navIsBranchManager)
+                <li>
+                    <a href="{{ route('admin.sales-reports.branch') }}" class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sales-reports.branch') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" /></svg>
+                        <span>Branch Sales</span>
+                    </a>
+                </li>
+                @endif
+                @if($navIsShopOwner)
+                <li>
+                    <a href="{{ route('admin.sales-reports.business') }}" class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sales-reports.business') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M4 18V5l8-2 8 2v13M8 9h.01M16 9h.01M8 13h.01M16 13h.01M10 21v-4h4v4" /></svg>
+                        <span>Business Sales</span>
+                    </a>
+                </li>
+                @endif
                 @if($navCanBranchOperations)
                 <li>
                     <a
@@ -113,6 +150,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
                         <span>Customer Orders</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.fulfilment.index') }}" class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.fulfilment.*') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7l1.5 13h11L19 7M9 7V5a3 3 0 016 0v2m-5 5v4m4-4v4" /></svg>
+                        <span>Order Fulfilment</span>
                     </a>
                 </li>
                 @endif
@@ -157,6 +200,14 @@
                     </a>
                 </li>
                 @endcan
+                @if($navIsShopOwner)
+                <li>
+                    <a href="{{ route('admin.pricing.index') }}" class="group flex gap-x-3 rounded-xl p-2.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.pricing.*') ? 'bg-white/15 text-white font-semibold' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="h-4 w-4 shrink-0 text-[#F28C75]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V5m0 3v8m0 0v3m9-7a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>Pricing &amp; Promotions</span>
+                    </a>
+                </li>
+                @endif
                 @can('viewAny', \App\Models\ProductCategory::class)
                 <li>
                     <a

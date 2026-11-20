@@ -8,9 +8,11 @@ use App\Models\Branch;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Services\BusinessAccessService;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -74,9 +76,9 @@ class ProductController extends Controller
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'price' => ['required', 'string', 'max:11', 'regex:/^(0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/'],
+            'sale_price' => ['nullable', 'string', 'max:11', 'regex:/^(0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/'],
+            'stock_quantity' => ['required', 'integer', 'min:0', 'max:2147483647'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
             'is_published' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
@@ -97,10 +99,13 @@ class ProductController extends Controller
             $branchId,
         );
 
-        $priceMinor = (int) round(((float) $validated['price']) * 100);
+        $priceMinor = $this->decimalToMinor($validated['price']);
         $salePriceMinor = isset($validated['sale_price']) && $validated['sale_price'] !== ''
-            ? (int) round(((float) $validated['sale_price']) * 100)
+            ? $this->decimalToMinor($validated['sale_price'])
             : null;
+        if ($salePriceMinor !== null && $salePriceMinor > $priceMinor) {
+            throw ValidationException::withMessages(['sale_price' => 'The sale price cannot exceed the regular product price.']);
+        }
 
         $slug = Str::slug($validated['name']);
         $originalSlug = $slug;
@@ -118,29 +123,39 @@ class ProductController extends Controller
             }
         }
 
-        $product = Product::create([
-            'company_id' => $assignment['company_id'],
-            'branch_id' => $assignment['branch_id'],
-            'product_category_id' => (int) $validated['product_category_id'],
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'sku' => strtoupper($validated['sku']),
-            'description' => $validated['description'] ?? null,
-            'price_minor' => $priceMinor,
-            'sale_price_minor' => $salePriceMinor,
-            'stock_quantity' => (int) $validated['stock_quantity'],
-            'low_stock_threshold' => (int) $validated['low_stock_threshold'],
-            'is_published' => $request->boolean('is_published'),
-            'is_featured' => $request->boolean('is_featured'),
-            'image_path' => $imagePath,
-            'ingredients' => $validated['ingredients'] ?? null,
-            'storage_instructions' => $validated['storage_instructions'] ?? null,
-        ]);
+        $product = DB::transaction(function () use ($request, $validated, $assignment, $slug, $priceMinor, $salePriceMinor, $imagePath): Product {
+            $product = Product::create([
+                'company_id' => $assignment['company_id'],
+                'branch_id' => $assignment['branch_id'],
+                'product_category_id' => (int) $validated['product_category_id'],
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'sku' => strtoupper($validated['sku']),
+                'description' => $validated['description'] ?? null,
+                'price_minor' => $priceMinor,
+                'sale_price_minor' => $salePriceMinor,
+                'stock_quantity' => (int) $validated['stock_quantity'],
+                'low_stock_threshold' => (int) $validated['low_stock_threshold'],
+                'is_published' => $request->boolean('is_published'),
+                'is_featured' => $request->boolean('is_featured'),
+                'image_path' => $imagePath,
+                'ingredients' => $validated['ingredients'] ?? null,
+                'storage_instructions' => $validated['storage_instructions'] ?? null,
+            ]);
+            app(InventoryMovementService::class)->recordOpening($product, $request->user());
+
+            return $product;
+        });
 
         AdminAuditLog::record(
             'product.create',
             "Created product '{$product->name}' (SKU: {$product->sku}).",
-            ['product_id' => $product->id, 'sku' => $product->sku]
+            [
+                'product_id' => $product->id, 'sku' => $product->sku,
+                'company_id' => $product->company_id, 'branch_id' => $product->branch_id,
+                'price_minor' => $product->price_minor, 'sale_price_minor' => $product->sale_price_minor,
+                'currency' => $product->currency,
+            ]
         );
 
         return redirect()->route('admin.products.index')->with('success', "Product '{$product->name}' created successfully.");
@@ -159,6 +174,9 @@ class ProductController extends Controller
     public function update(Request $request, Product $product): RedirectResponse
     {
         Gate::authorize('update', $product);
+        if ($product->archived_at !== null) {
+            return redirect()->route('admin.products.index')->with('error', 'Archived products are read-only to preserve catalogue history.');
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -166,9 +184,10 @@ class ProductController extends Controller
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku,'.$product->id],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'price' => ['required', 'string', 'max:11', 'regex:/^(0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/'],
+            'sale_price' => ['nullable', 'string', 'max:11', 'regex:/^(0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/'],
+            'stock_quantity' => ['required', 'integer', 'min:0', 'max:2147483647'],
+            'stock_adjustment_reason' => ['nullable', 'string', 'max:1000'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
             'is_published' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
@@ -196,10 +215,20 @@ class ProductController extends Controller
             ]);
         }
 
-        $priceMinor = (int) round(((float) $validated['price']) * 100);
+        if ($branchId !== $product->branch_id
+            && ($product->stock_quantity > 0 || $product->orderItems()->exists() || $product->inventoryMovements()->exists())) {
+            throw ValidationException::withMessages([
+                'branch_id' => 'Products with stock or movement history cannot change inventory branches until branch transfers are implemented.',
+            ]);
+        }
+
+        $priceMinor = $this->decimalToMinor($validated['price']);
         $salePriceMinor = isset($validated['sale_price']) && $validated['sale_price'] !== ''
-            ? (int) round(((float) $validated['sale_price']) * 100)
+            ? $this->decimalToMinor($validated['sale_price'])
             : null;
+        if ($salePriceMinor !== null && $salePriceMinor > $priceMinor) {
+            throw ValidationException::withMessages(['sale_price' => 'The sale price cannot exceed the regular product price.']);
+        }
 
         $updateData = [
             'product_category_id' => (int) $validated['product_category_id'],
@@ -209,7 +238,6 @@ class ProductController extends Controller
             'description' => $validated['description'] ?? null,
             'price_minor' => $priceMinor,
             'sale_price_minor' => $salePriceMinor,
-            'stock_quantity' => (int) $validated['stock_quantity'],
             'low_stock_threshold' => (int) $validated['low_stock_threshold'],
             'is_published' => $request->boolean('is_published'),
             'is_featured' => $request->boolean('is_featured'),
@@ -224,12 +252,39 @@ class ProductController extends Controller
             }
         }
 
-        $product->update($updateData);
+        $targetStock = (int) $validated['stock_quantity'];
+        $reason = trim((string) ($validated['stock_adjustment_reason'] ?? ''));
+        if ($targetStock !== (int) $product->stock_quantity && $reason === '') {
+            throw ValidationException::withMessages([
+                'stock_adjustment_reason' => 'Explain the stock change so it can be reconciled later.',
+            ]);
+        }
+
+        $oldPriceMinor = (int) $product->price_minor;
+        $oldSalePriceMinor = $product->sale_price_minor === null ? null : (int) $product->sale_price_minor;
+        DB::transaction(function () use ($product, $updateData, $targetStock, $reason, $request): void {
+            $lockedProduct = Product::query()->withoutGlobalScopes()->whereKey($product->getKey())->lockForUpdate()->firstOrFail();
+            $lockedProduct->update($updateData);
+            if ($targetStock !== (int) $lockedProduct->stock_quantity) {
+                app(InventoryMovementService::class)->adjustToQuantity(
+                    $lockedProduct,
+                    $request->user(),
+                    $targetStock,
+                    $reason,
+                    (string) Str::uuid(),
+                );
+            }
+        });
 
         AdminAuditLog::record(
             'product.update',
             "Updated product '{$product->name}' (SKU: {$product->sku}).",
-            ['product_id' => $product->id]
+            [
+                'product_id' => $product->id, 'company_id' => $product->company_id, 'branch_id' => $product->branch_id,
+                'old_price_minor' => $oldPriceMinor, 'new_price_minor' => $priceMinor,
+                'old_sale_price_minor' => $oldSalePriceMinor, 'new_sale_price_minor' => $salePriceMinor,
+                'currency' => $product->currency,
+            ]
         );
 
         return redirect()->route('admin.products.index')->with('success', "Product '{$product->name}' updated successfully.");
@@ -240,9 +295,9 @@ class ProductController extends Controller
         Gate::authorize('delete', $product);
 
         // Check if product has been ordered
-        if ($product->orderItems()->exists()) {
+        if ($product->orderItems()->exists() || $product->inventoryMovements()->exists() || $product->branchPrices()->exists()) {
             return redirect()->route('admin.products.index')
-                ->with('error', "Cannot delete '{$product->name}' because it is associated with existing customer orders. You may unpublish it instead.");
+                ->with('error', "Cannot delete '{$product->name}' because order, inventory, or branch pricing history exists. Archive it instead.");
         }
 
         $name = $product->name;
@@ -262,6 +317,24 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', "Product '{$name}' was deleted successfully.");
     }
 
+    public function archive(Request $request, Product $product): RedirectResponse
+    {
+        Gate::authorize('update', $product);
+        if ($product->archived_at !== null) {
+            return redirect()->route('admin.products.index')->with('success', "'{$product->name}' is already archived.");
+        }
+
+        DB::transaction(function () use ($product): void {
+            $locked = Product::query()->withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+            $locked->forceFill(['is_published' => false, 'archived_at' => now()])->save();
+        });
+        AdminAuditLog::record('product.archive', "Archived product '{$product->name}'.", [
+            'product_id' => $product->id, 'company_id' => $product->company_id, 'branch_id' => $product->branch_id,
+        ]);
+
+        return redirect()->route('admin.products.index')->with('success', "'{$product->name}' was archived and is no longer purchasable.");
+    }
+
     private function assertVisibleCategory(int $categoryId): ProductCategory
     {
         $category = ProductCategory::query()->whereKey($categoryId)->first();
@@ -272,6 +345,19 @@ class ProductController extends Controller
         }
 
         return $category;
+    }
+
+    private function decimalToMinor(string $value): int
+    {
+        if (! preg_match('/^(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/', $value, $matches)) {
+            throw ValidationException::withMessages(['price' => 'Enter a non-negative amount with no more than two decimal places.']);
+        }
+        $minor = ((int) $matches[1] * 100) + (int) str_pad($matches[2] ?? '', 2, '0');
+        if ($minor > 4_294_967_295) {
+            throw ValidationException::withMessages(['price' => 'The price exceeds the amount supported by the current product schema.']);
+        }
+
+        return $minor;
     }
 
     private function assertVisibleBranch(?int $branchId, int $companyId): void

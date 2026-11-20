@@ -14,7 +14,7 @@ Seeders no longer create predictable user accounts or sample orders. Demo catalo
 ## Safety and database status
 
 - The initial worktree was on `master` with **33 modified tracked files, 281 untracked entries, and no staged changes**. Existing changes were preserved; no reset, stash, commit, or push was performed.
-- The previously verified backup is at `C:\Users\Dell\.copilot\session-state\6ddfa72c-25bb-4595-b023-bc2da8efad81\files\pawhaven-phase-0-baseline-20261108\`. Its SQLite backup passed `PRAGMA integrity_check`; the four backed-up upload files (538,411 bytes total) were hash-verified.
+- The previously verified backup is at `<local-user-path>`. Its SQLite backup passed `PRAGMA integrity_check`; the four backed-up upload files (538,411 bytes total) were hash-verified.
 - Before applying the migration, the active SQLite database again passed its integrity check, and all baseline table row counts matched the backup.
 - The active database now has the single new migration applied. Compared with baseline, the only table-count difference is the expected `migrations` row increasing from 11 to 12. All application-data table counts are unchanged; the existing two orders and two order items remain present.
 - No destructive SQL, reset, or data backfill was used. The application database migration adds one nullable timestamp only.

@@ -16,8 +16,7 @@ class CreateAdminCommand extends Command
      */
     protected $signature = 'admin:create
                             {--name= : The full name of the administrator}
-                            {--email= : The email address of the administrator}
-                            {--password= : The password for the administrator account}';
+                            {--email= : The email address of the administrator}';
 
     /**
      * The console command description.
@@ -53,34 +52,32 @@ class CreateAdminCommand extends Command
         $existingUser = User::where('email', $email)->first();
 
         if ($existingUser) {
-            if ($this->confirm("User [{$email}] already exists with role [{$existingUser->role}]. Promote to administrator?", true)) {
-                $existingUser->role = 'admin';
-                if (! $existingUser->hasVerifiedEmail()) {
-                    $existingUser->markEmailAsVerified();
-                }
+            if (! $this->confirm("User [{$email}] already exists with role [{$existingUser->role}]. Promote to administrator?", false)) {
+                $this->warn('Operation cancelled.');
 
-                $password = $this->option('password') ?: $this->secret('New Password (leave empty to keep current password)');
-                if (! empty($password)) {
-                    if (strlen($password) < 8) {
-                        $this->error('Password must be at least 8 characters long.');
-
-                        return self::FAILURE;
-                    }
-                    $existingUser->password = Hash::make($password);
-                }
-
-                $existingUser->save();
-                $this->info("User [{$email}] has been successfully promoted to Administrator.");
-
-                return self::SUCCESS;
+                return self::FAILURE;
             }
 
-            $this->warn('Operation cancelled.');
+            $password = $this->secret('New Password (leave empty to keep current password)');
+            if (! empty($password) && strlen($password) < 8) {
+                $this->error('Password must be at least 8 characters long.');
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
+
+            $existingUser->role = 'admin';
+            $existingUser->email_verified_at ??= now();
+            if (! empty($password)) {
+                $existingUser->password = Hash::make($password);
+            }
+            $existingUser->save();
+
+            $this->info("User [{$email}] has been successfully promoted to Administrator.");
+
+            return self::SUCCESS;
         }
 
-        $password = $this->option('password') ?: $this->secret('Administrator Password (min. 8 characters)');
+        $password = $this->secret('Administrator Password (min. 8 characters)');
 
         if (strlen((string) $password) < 8) {
             $this->error('Password must be at least 8 characters long.');
@@ -93,8 +90,8 @@ class CreateAdminCommand extends Command
         $user->email = (string) $email;
         $user->password = Hash::make((string) $password);
         $user->role = 'admin';
+        $user->email_verified_at = now();
         $user->save();
-        $user->markEmailAsVerified();
 
         $this->info("Administrator account [{$email}] created successfully!");
         $this->line('You can now log in at: '.route('admin.login'));

@@ -225,7 +225,7 @@ class EmailOtpAuthenticationTest extends TestCase
             $response = $this->get($url)->assertOk();
             $response->assertDontSee('value="')
                 ->assertDontSee('placeholder=')
-                ->assertDontSee('your-email@pawhaven.com');
+                ->assertDontSee('your-email@example.test');
         }
     }
 

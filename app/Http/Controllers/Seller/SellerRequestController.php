@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\PaymentTransactionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -104,11 +105,6 @@ class SellerRequestController extends Controller
 
         $order->status = $nextStatus;
 
-        // When delivery is confirmed for Cash on Delivery / handover, verify payment automatically
-        if ($nextStatus === OrderStatus::Delivered && $order->payment_method === 'cod') {
-            $order->payment_status = PaymentStatus::Paid;
-        }
-
         $order->save();
 
         return back()->with('success', "Request #{$order->order_number} status updated to '{$nextStatus->label()}'.");
@@ -117,23 +113,17 @@ class SellerRequestController extends Controller
     /**
      * Record a verified payment for the request.
      */
-    public function verifyPayment(Request $request, Order $order): RedirectResponse
+    public function verifyPayment(Request $request, Order $order, PaymentTransactionService $payments): RedirectResponse
     {
         Gate::authorize('update', $order);
 
         $validated = $request->validate([
-            'payment_status' => ['required', 'string', 'in:paid,refunded'],
+            'payment_status' => ['required', 'string', 'in:paid'],
             'payment_reference' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $order->payment_status = PaymentStatus::from($validated['payment_status']);
+        $payments->confirmMarketplaceSellerReceipt($order, $request->user(), $validated['payment_reference'] ?? null);
 
-        if (! empty($validated['payment_reference'])) {
-            $order->payment_reference = $validated['payment_reference'];
-        }
-
-        $order->save();
-
-        return back()->with('success', "Payment status for request #{$order->order_number} updated to '{$order->payment_status->label()}'.");
+        return back()->with('success', "Payment receipt for request #{$order->order_number} was recorded.");
     }
 }

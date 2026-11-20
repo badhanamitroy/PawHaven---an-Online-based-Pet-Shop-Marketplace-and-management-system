@@ -3,11 +3,22 @@
 
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Input\ArgvInput;
+use Tests\Support\TestDatabaseGuard;
 
 define('LARAVEL_START', microtime(true));
 
 // Register the Composer autoloader...
 require __DIR__.'/vendor/autoload.php';
+
+// Keep the Artisan test runner away from application databases before Laravel
+// itself boots. PHPUnit performs a second, effective-configuration check from
+// its configured bootstrap before any test classes or traits are loaded.
+if (class_exists(TestDatabaseGuard::class)
+    && TestDatabaseGuard::isArtisanTestCommand($_SERVER['argv'] ?? [])) {
+    $processEnvironment = TestDatabaseGuard::processEnvironmentSnapshot();
+    TestDatabaseGuard::assertSafeProcessOverrides($processEnvironment);
+    TestDatabaseGuard::applyFunctionalTestEnvironment();
+}
 
 // Bootstrap Laravel and handle the command...
 /** @var Application $app */

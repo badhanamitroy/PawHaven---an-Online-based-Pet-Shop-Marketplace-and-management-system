@@ -132,7 +132,7 @@ class BusinessAccessController extends Controller
             }
 
             $company = Company::create([...$validated, 'slug' => $slug, 'is_active' => true]);
-            AdminAuditLog::record('company.create', "Created company '{$company->name}'.", ['company_id' => $company->id]);
+            AdminAuditLog::record('company.create', "Created company #{$company->id}.", ['company_id' => $company->id]);
 
             return $company;
         });
@@ -161,7 +161,7 @@ class BusinessAccessController extends Controller
         $company->update($validated);
         AdminAuditLog::record(
             'company.update',
-            "Updated company '{$company->name}'.",
+            "Updated company #{$company->id}.",
             ['company_id' => $company->id]
         );
 
@@ -200,7 +200,7 @@ class BusinessAccessController extends Controller
         });
         AdminAuditLog::record(
             'branch.create',
-            "Created branch '{$branch->name}' for company '{$company->name}'.",
+            "Created branch #{$branch->id} for company #{$company->id}.",
             ['company_id' => $company->id, 'branch_code' => $branch->code]
         );
 
@@ -244,7 +244,7 @@ class BusinessAccessController extends Controller
         );
         AdminAuditLog::record(
             'business.membership.assign',
-            "Assigned '{$staffUser->name}' to company '{$company->name}'.",
+            "Assigned user #{$staffUser->id} to company #{$company->id}.",
             [
                 'company_id' => $company->id,
                 'branch_id' => $branchId,
@@ -260,14 +260,13 @@ class BusinessAccessController extends Controller
     public function destroyMembership(BusinessMembership $membership): RedirectResponse
     {
         Gate::authorize('delete', $membership);
-        $userName = $membership->user->name;
         app(BusinessMembershipService::class)->deactivate(request()->user(), $membership);
 
         $companyId = $membership->company_id;
         $branchId = $membership->branch_id;
         AdminAuditLog::record(
             'business.membership.remove',
-            "Removed '{$userName}' from a business assignment.",
+            "Removed membership #{$membership->id} from company #{$companyId}.",
             [
                 'company_id' => $companyId,
                 'branch_id' => $branchId,

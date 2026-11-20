@@ -70,7 +70,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description for testing',
             'logo_light' => $lightLogo,
             'logo_dark' => $darkLogo,
@@ -117,7 +117,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
             'logo_light' => $firstLogo,
         ]);
@@ -134,7 +134,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
             'logo_light' => $secondLogo,
         ]);
@@ -162,7 +162,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
         ]);
 
@@ -188,7 +188,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
             'logo_light' => $invalidFile,
         ]);
@@ -206,7 +206,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
             'logo_light' => $oversizedImage,
         ]);
@@ -225,7 +225,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => '#245C45',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'hello@pawhaven.com',
+            'brand_contact_email' => 'hello@example.test',
             'brand_meta_description' => 'Meta description',
             'logo_light' => $oversizedDimImage,
         ]);
@@ -266,7 +266,7 @@ class BrandIdentityTest extends TestCase
             'brand_primary_color' => 'not-a-color',
             'brand_secondary_color' => '#173F32',
             'brand_accent_color' => '#F28C75',
-            'brand_contact_email' => 'badhanamitroy571@gmail.com',
+            'brand_contact_email' => 'contact@example.test',
             'brand_meta_description' => 'Meta description',
         ]);
 

@@ -125,7 +125,7 @@
                                     </span>
                                     <div class="font-bold text-[#173F32] mt-0.5">
                                         @if($item->price_minor)
-                                            ${{ number_format($item->price_minor / 100, 2) }}
+                                            {{ $item->currency }} {{ number_format($item->price_minor / 100, 2) }}
                                         @else
                                             <span class="text-emerald-700 text-[11px]">Free / Rehome</span>
                                         @endif

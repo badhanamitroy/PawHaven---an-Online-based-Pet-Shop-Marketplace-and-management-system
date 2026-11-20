@@ -2,11 +2,11 @@ import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { BASE_URL, CHROME_PATH, qaCredentials, REPO_ROOT, WEBAPP_ROOT } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
-const WEBAPP_ROOT = 'D:\\PawHaven\\PH Web Version\\WebApp';
-const REPO_ROOT = 'D:\\PawHaven';
+const adminCredentials = qaCredentials('admin');
+const customerCredentials = qaCredentials('customer');
+const sellerCredentials = qaCredentials('seller');
 
 const VIEWPORTS = {
     desktop: { width: 1440, height: 900 },
@@ -196,7 +196,7 @@ async function run() {
         console.log('\n--- 04-AUTH-NEGATIVE ---');
         await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle2' });
         await page.type('input[name="email"]', 'invalid-user@pawhaven.test');
-        await page.type('input[name="password"]', 'WrongPassword123!');
+        await page.type('input[name="password"]', 'not-a-valid-test-password');
         const loginBtn = await page.$('button[type="submit"]');
         if (loginBtn) {
             await loginBtn.click();
@@ -221,8 +221,8 @@ async function run() {
         console.log('\n--- 05-CUSTOMER-PORTAL ---');
         await safeLogout(page);
         await page.goto(`${BASE_URL}/login?role=customer`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'customer@pawhaven.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
+        await page.type('input[name="email"]', customerCredentials.email);
+        await page.type('input[name="password"]', customerCredentials.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
 
@@ -244,8 +244,8 @@ async function run() {
         console.log('\n--- 06-SELLER-PORTAL ---');
         await safeLogout(page);
         await page.goto(`${BASE_URL}/login?role=seller`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'seller@pawhaven.com');
-        await page.type('input[name="password"]', 'SellerPassword123!');
+        await page.type('input[name="email"]', sellerCredentials.email);
+        await page.type('input[name="password"]', sellerCredentials.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
 
@@ -269,8 +269,8 @@ async function run() {
         await page.goto(`${BASE_URL}/admin/login`, { waitUntil: 'networkidle2' });
         await capture(page, '07-admin-portal', 'ADMIN-01-login-screen.png', 'ADMIN-01', 'Dedicated internal Admin Console authentication portal');
 
-        await page.type('input[name="email"]', 'badhanamitroy571@gmail.com');
-        await page.type('input[name="password"]', 'AdminPassword123!');
+        await page.type('input[name="email"]', adminCredentials.email);
+        await page.type('input[name="password"]', adminCredentials.password);
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),
             page.click('button[type="submit"]')
@@ -334,8 +334,8 @@ async function run() {
 
         // Customer Request Confirmation View
         await page.goto(`${BASE_URL}/login?role=customer`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'customer@pawhaven.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
+        await page.type('input[name="email"]', customerCredentials.email);
+        await page.type('input[name="password"]', customerCredentials.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
         await page.goto(`${BASE_URL}/dashboard?tab=requests`, { waitUntil: 'networkidle2' });
@@ -344,8 +344,8 @@ async function run() {
         // Seller Request Approval View
         await safeLogout(page);
         await page.goto(`${BASE_URL}/login?role=seller`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'seller@pawhaven.com');
-        await page.type('input[name="password"]', 'SellerPassword123!');
+        await page.type('input[name="email"]', sellerCredentials.email);
+        await page.type('input[name="password"]', sellerCredentials.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
         await page.goto(`${BASE_URL}/seller/requests`, { waitUntil: 'networkidle2' });
@@ -370,8 +370,8 @@ async function run() {
 
         // 3. Customer attempting to access /seller/dashboard
         await page.goto(`${BASE_URL}/login?role=customer`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'customer@pawhaven.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
+        await page.type('input[name="email"]', customerCredentials.email);
+        await page.type('input[name="password"]', customerCredentials.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
 

@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ListingBrowseController extends Controller
 {
@@ -151,6 +152,11 @@ class ListingBrowseController extends Controller
 
         $user = $request->user();
         $price = $listing->price_minor ?? 0;
+        if ($price < 0 || $price > 4_294_967_295) {
+            throw ValidationException::withMessages([
+                'listing' => 'This listing price exceeds the amount range supported by order records.',
+            ]);
+        }
 
         $order = DB::transaction(function () use ($listing, $user, $validated, $price): Order {
             $order = Order::create([
@@ -169,6 +175,7 @@ class ListingBrowseController extends Controller
                 'subtotal_minor' => $price,
                 'delivery_fee_minor' => 0,
                 'total_minor' => $price,
+                'currency' => $listing->currency,
                 'notes' => "Purchase request for pet listing #{$listing->id} ({$listing->title}). Seller: {$listing->seller?->name}. ".($validated['notes'] ?? ''),
             ]);
 
@@ -228,6 +235,7 @@ class ListingBrowseController extends Controller
                 'subtotal_minor' => 0,
                 'delivery_fee_minor' => 0,
                 'total_minor' => 0,
+                'currency' => $listing->currency,
                 'notes' => "Adoption inquiry for pet listing #{$listing->id} ({$listing->title}). Rehoming Shelter/Owner: {$listing->seller?->name}. Applicant Notes: {$validated['notes']}",
             ]);
 

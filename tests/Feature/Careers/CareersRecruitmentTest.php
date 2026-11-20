@@ -4,6 +4,7 @@ namespace Tests\Feature\Careers;
 
 use App\Mail\EmploymentOfferMail;
 use App\Mail\EmploymentOfferOtpMail;
+use App\Mail\LoginOtpMail;
 use App\Mail\PendingEmployeeApprovalMail;
 use App\Models\Branch;
 use App\Models\BusinessMembership;
@@ -145,17 +146,51 @@ class CareersRecruitmentTest extends TestCase
         $this->assertFalse(Auth::check(), 'Offer OTP must not authenticate the candidate.');
         Mail::assertSent(PendingEmployeeApprovalMail::class);
 
+        $provisionalPassword = 'candidate-provisional-password';
+        $employee->forceFill(['password' => \Illuminate\Support\Facades\Hash::make($provisionalPassword)])->save();
+        $this->post(route('admin.login.store'), [
+            'email' => $employee->email,
+            'password' => $provisionalPassword,
+        ])->assertSessionHasErrors('email');
+        $this->assertGuest();
+        Mail::assertNotSent(LoginOtpMail::class);
+
         $this->actingAs($employee)->get(route('admin.dashboard'))->assertForbidden();
         $this->actingAs($this->admin)->get(route('admin.careers.approvals.index'))->assertForbidden();
+        $this->post(route('admin.careers.approvals.approve', $offer), [])->assertForbidden();
+        $this->assertFalse($membership->fresh()->is_active);
         $this->actingAs($this->owner)->get(route('admin.careers.approvals.index'))->assertOk()->assertSee($employee->email);
         $this->post(route('admin.careers.approvals.approve', $offer), [])->assertRedirect();
 
         $this->assertTrue($membership->fresh()->is_active);
         $this->assertSame('hired', $application->fresh()->status);
-        Notification::assertSentTo($employee, ResetPassword::class);
-
         Auth::logout();
-        $this->actingAs($employee)->get(route('admin.dashboard'))->assertOk();
+        $this->assertGuest();
+        $resetToken = null;
+        Notification::assertSentTo($employee, ResetPassword::class, function (ResetPassword $notification) use (&$resetToken): bool {
+            $resetToken = $notification->token;
+
+            return true;
+        });
+        $this->assertNotNull($resetToken);
+        $this->post(route('password.update'), [
+            'token' => $resetToken,
+            'email' => $employee->email,
+            'password' => 'PawHaven-Test-Pass123!',
+            'password_confirmation' => 'PawHaven-Test-Pass123!',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('login', absolute: false));
+
+        $this->post(route('admin.login.store'), [
+            'email' => $employee->email,
+            'password' => 'PawHaven-Test-Pass123!',
+        ])->assertRedirect(route('admin.two-factor'));
+        $loginOtp = Mail::sent(LoginOtpMail::class)->last();
+        $this->assertNotNull($loginOtp);
+        $this->assertSame($employee->email, $loginOtp->user->email);
+        $this->post(route('admin.two-factor.store'), ['code' => $loginOtp->otp])
+            ->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticatedAs($employee);
+        $this->get(route('admin.dashboard'))->assertOk();
         $this->travelBack();
     }
 

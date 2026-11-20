@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use App\Services\CurrencyPolicy;
 
 /**
  * @property PetListingType $listing_type
@@ -26,6 +27,16 @@ class PetListing extends Model
 {
     /** @use HasFactory<PetListingFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (PetListing $listing): void {
+            $policy = app(CurrencyPolicy::class);
+            $currency = $policy->current();
+            $policy->assertCanCreateIn($currency);
+            $listing->setAttribute('currency', $currency);
+        });
+    }
 
     protected function casts(): array
     {

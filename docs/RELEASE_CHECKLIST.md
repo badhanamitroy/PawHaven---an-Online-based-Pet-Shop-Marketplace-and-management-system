@@ -11,19 +11,21 @@ Before launching PawHaven into a live production environment or presenting to ma
 - [ ] **`APP_DEBUG` is set to `false`**.
 - [ ] **`APP_KEY` is generated and valid** (`php artisan key:generate`).
 - [ ] **`APP_URL` matches the canonical HTTPS domain** (e.g. `https://pawhaven.com`).
-- [ ] **Database credentials verified**: SQLite file exists or MySQL database is reachable.
+- [ ] **Database configuration verified**: the effective connection resolves to the intended SQLite file or a reachable MySQL database; do not print credentials in logs.
 - [ ] **`.env` is not committed or publicly accessible** (verified via web browser: accessing `https://your-domain.com/.env` returns `403` or `404`).
 
 ### 2. Assets & Storage
 - [ ] **Production assets compiled**: `npm run build` completed with zero errors (`public/build` manifest generated).
 - [ ] **Storage symlink active**: `php artisan storage:link` links `public/storage` to `storage/app/public`.
-- [ ] **Directory write permissions set**: `storage/` and `bootstrap/cache/` are writable by the web server user (`chmod 775`).
+- [ ] **Least-privilege permissions set**: only required storage/cache paths are writable by the application account; keep SQLite files private and avoid blanket recursive permission changes.
 - [ ] **Branding logos placed**: Light and dark logos confirmed visible on header, footer, and login screens.
 
 ### 3. Database & System Migrations
-- [ ] **Migrations up to date**: `php artisan migrate --status` shows all migrations `[Ran]`.
-- [ ] **No destructive migrations**: Schema additions are strictly additive.
-- [ ] **Initial Administrator created**: Account provisioned via `php artisan admin:create` and verified at `/admin/login`.
+- [ ] **Migration history reviewed**: `php artisan migrate:status` shows the expected migration sequence and no unexpected pending or unknown migrations.
+- [ ] **Upgrade backup verified**: create and independently verify a database backup before applying migrations to an existing installation.
+- [ ] **Migration behavior reviewed**: inspect backfills, constraints, data conversions, and rollback behavior; the migration chain is not assumed to be strictly additive.
+- [ ] **Initial Administrator created**: run `php artisan admin:create` interactively and verify email one-time-code delivery.
+- [ ] **Initial Shop Owner assigned**: use Business Management to assign a verified eligible business-owner account; the migration does not create an Owner membership automatically.
 
 ### 4. Communications & Email
 - [ ] **Mail transport configured**: `MAIL_MAILER` set to a functional SMTP/API provider (e.g. Mailgun, Postmark, SES).
@@ -39,6 +41,11 @@ Before launching PawHaven into a live production environment or presenting to ma
 - [ ] **Seller portal isolated**: Sellers can only view and mutate their own listings and requests (`IDOR` protected).
 - [ ] **Customer privacy isolated**: Customers cannot view or cancel other customer orders.
 - [ ] **Draft content hidden**: Unpublished homepage drafts are never exposed to public visitors.
+
+### 7. Buyer Package Hygiene
+- [ ] **Generated guides current**: rebuild and review buyer PDFs from the current guide source before distribution; do not ship old generated copies without review.
+- [ ] **No developer data included**: exclude local QA screenshots, real account identifiers, personal workstation paths, and credentials from the buyer package.
+- [ ] **Test automation configured locally**: browser QA scripts use local environment variables for credentials and browser paths; do not commit those values.
 
 ---
 

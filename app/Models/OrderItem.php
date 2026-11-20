@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -33,6 +34,12 @@ class OrderItem extends Model
         'price_minor',
         'quantity',
         'subtotal_minor',
+        'base_price_minor',
+        'resolved_price_minor',
+        'promotion_discount_minor',
+        'coupon_discount_minor',
+        'promotion_id',
+        'coupon_id',
     ];
 
     /**
@@ -44,6 +51,10 @@ class OrderItem extends Model
             'price_minor' => 'integer',
             'quantity' => 'integer',
             'subtotal_minor' => 'integer',
+            'base_price_minor' => 'integer',
+            'resolved_price_minor' => 'integer',
+            'promotion_discount_minor' => 'integer',
+            'coupon_discount_minor' => 'integer',
         ];
     }
 
@@ -61,5 +72,15 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productReturns(): HasMany
+    {
+        return $this->hasMany(ProductReturn::class);
+    }
+
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
     }
 }

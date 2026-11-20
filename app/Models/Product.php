@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Models\Concerns\BusinessBranchScoped;
 use App\Models\Concerns\HasBusinessScope;
+use App\Services\CurrencyPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -37,6 +39,16 @@ use Illuminate\Support\Carbon;
 class Product extends Model implements BusinessBranchScoped
 {
     use HasBusinessScope;
+
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product): void {
+            $policy = app(CurrencyPolicy::class);
+            $currency = $policy->current();
+            $policy->assertCanCreateIn($currency);
+            $product->setAttribute('currency', $currency);
+        });
+    }
 
     /**
      * @var list<string>
@@ -72,6 +84,7 @@ class Product extends Model implements BusinessBranchScoped
             'low_stock_threshold' => 'integer',
             'is_published' => 'boolean',
             'is_featured' => 'boolean',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -112,6 +125,21 @@ class Product extends Model implements BusinessBranchScoped
         return $this->hasMany(OrderItem::class);
     }
 
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
+    public function branchPrices(): HasMany
+    {
+        return $this->hasMany(BranchProductPrice::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(ProductReturn::class);
+    }
+
     /**
      * Determine if product has low stock.
      */
@@ -136,7 +164,20 @@ class Product extends Model implements BusinessBranchScoped
      */
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('is_published', true);
+        return $query->where('is_published', true)
+            ->whereNull('archived_at')
+            ->whereHas('company', fn (Builder $company) => $company->where('is_active', true))
+            ->whereHas('category', fn (Builder $category) => $category->where('is_active', true))
+            ->where(function (Builder $scope): void {
+                $scope->whereNull('branch_id')->orWhereHas('branch', function (Builder $branch): void {
+                    $branch->where('is_active', true)->whereColumn('branches.company_id', 'products.company_id');
+                });
+            });
+    }
+
+    public function isPurchasable(): bool
+    {
+        return $this->is_published && $this->archived_at === null;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0  
 **Baseline Date:** October 30, 2026  
-**Audited Location:** `D:\PawHaven\PH Web Version\WebApp`  
+**Audited Location:** `<project-root>`
 
 ---
 

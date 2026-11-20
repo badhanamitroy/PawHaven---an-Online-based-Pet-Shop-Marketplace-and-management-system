@@ -8,7 +8,7 @@ PawHaven is a Laravel web application for pet listings, customer purchase and in
 ![PHP 8.3+](https://img.shields.io/badge/PHP-%5E8.3-777BB4?logo=php&logoColor=white)
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)
 
-[GitHub profile](https://github.com/badhanamitroy) · [Repository](https://github.com/badhanamitroy/PawHaven)
+PawHeaven source and support details are provided with the buyer distribution.
 
 > **Repository contents:** The GitHub `main` branch currently publishes this README only. The Laravel application source is available in a separate `PH Web Version/WebApp` source checkout and has not been published to this repository. The setup instructions below apply to a checkout that contains the Laravel project files; cloning the current GitHub branch alone is not enough to run the application.
 
@@ -148,7 +148,7 @@ The GitHub repository currently contains only this README, so the clone command 
 ### Setup
 
 ```bash
-git clone https://github.com/badhanamitroy/PawHaven.git
+git clone <repository-url>
 cd PawHaven
 ```
 
@@ -228,6 +228,22 @@ Start Laravel in another terminal:
 ```bash
 php artisan serve
 ```
+
+### Queues and scheduled tasks
+
+The example environment and queue configuration use the `database` queue connection. The queue tables are included in the standard migrations. When the application has queued work to process, run a worker in a separate terminal:
+
+```bash
+php artisan queue:work
+```
+
+The application currently registers one scheduled task: `device-sessions:prune`, which runs daily to remove device-session records past their retention period. For local development, keep Laravel's scheduler running in a separate terminal:
+
+```bash
+php artisan schedule:work
+```
+
+In production, configure the host scheduler to invoke `php artisan schedule:run` once per minute from the Laravel project directory. The scheduler only runs tasks that are due; it does not replace a queue worker for database-backed queued jobs.
 
 ## Environment configuration
 
@@ -323,6 +339,4 @@ No separate formal contribution policy is currently published. Avoid including `
 The local application's `composer.json` declares `MIT`, but this source checkout has no `LICENSE` text file, and the current GitHub repository does not publish the application manifest. Review the intended license and publish its license text before relying on an open-source grant. Until a license is clearly published, do not assume reuse permissions.
 
 ## Maintainer
-
-- GitHub: [badhanamitroy](https://github.com/badhanamitroy)
-- Repository: [badhanamitroy/PawHaven](https://github.com/badhanamitroy/PawHaven)
+- Source repository URL is supplied with the buyer distribution.

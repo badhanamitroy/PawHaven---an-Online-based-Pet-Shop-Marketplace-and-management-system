@@ -15,7 +15,7 @@
         <div style="font-size: 16px; font-weight: 800; color: #173F32; margin-bottom: 4px;">
             Payment Status: {{ $order->payment_status->label() }}
         </div>
-        <div><strong>Total Amount:</strong> ${{ number_format($order->total_minor / 100, 2) }}</div>
+        <div><strong>Total Amount:</strong> {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}</div>
         <div><strong>Order Status:</strong> {{ $order->status->label() }}</div>
     </div>
 

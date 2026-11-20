@@ -90,7 +90,7 @@ class InvitationService
             ]);
             AdminAuditLog::record(
                 'invitation.created',
-                "Invitation issued to {$invitation->email} for {$invitation->roleLabel()} role.",
+                "Invitation #{$invitation->id} issued for {$invitation->roleLabel()} role.",
                 [
                     'invitation_id' => $invitation->id,
                     'role' => $invitation->role,
@@ -159,7 +159,7 @@ class InvitationService
             $this->deliverInvitationEmail($current, $rawToken, $branch);
             AdminAuditLog::record(
                 'invitation.resent',
-                "Invitation refreshed and resent to {$current->email} ({$current->roleLabel()}).",
+                "Invitation #{$current->id} refreshed and resent for {$current->roleLabel()} role.",
                 [
                     'invitation_id' => $current->id,
                     'role' => $current->role,
@@ -196,7 +196,7 @@ class InvitationService
             $current->forceFill(['revoked_at' => now(), 'active_email_key' => null])->save();
             AdminAuditLog::record(
                 'invitation.revoked',
-                "Invitation to {$current->email} ({$current->roleLabel()}) was revoked by {$actor->name}.",
+                "Invitation #{$current->id} for {$current->roleLabel()} role was revoked by user #{$actor->id}.",
                 [
                     'invitation_id' => $current->id,
                     'role' => $current->role,
@@ -310,7 +310,7 @@ class InvitationService
 
             AdminAuditLog::record(
                 'invitation.accepted',
-                "Invitation accepted by {$user->name} ({$user->email}) for {$locked->roleLabel()} role.",
+                "Invitation #{$locked->id} accepted for {$locked->roleLabel()} role.",
                 [
                     'invitation_id' => $locked->id,
                     'user_id' => $user->id,
@@ -385,7 +385,6 @@ class InvitationService
         } catch (Throwable $exception) {
             Log::error('Failed to deliver invitation email.', [
                 'invitation_id' => $invitation->id,
-                'email' => $invitation->email,
                 'role' => $invitation->role,
                 'error_type' => get_class($exception),
             ]);

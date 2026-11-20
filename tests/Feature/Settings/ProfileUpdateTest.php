@@ -103,6 +103,34 @@ class ProfileUpdateTest extends TestCase
         $this->assertFalse(auth()->check());
     }
 
+    public function test_platform_administrator_cannot_self_delete(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::settings.delete-user-modal')
+            ->set('password', 'password')
+            ->call('deleteUser')
+            ->assertHasErrors(['account']);
+
+        $this->assertNotNull($user->fresh());
+    }
+
+    public function test_business_employee_cannot_self_delete(): void
+    {
+        $user = User::factory()->create(['role' => 'staff']);
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::settings.delete-user-modal')
+            ->set('password', 'password')
+            ->call('deleteUser')
+            ->assertHasErrors(['account']);
+
+        $this->assertNotNull($user->fresh());
+    }
+
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
         $user = User::factory()->create();

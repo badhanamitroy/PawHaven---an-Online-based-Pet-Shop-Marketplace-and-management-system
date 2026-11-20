@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\BusinessAccessService;
+use App\Services\CurrencyPolicy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,15 +34,17 @@ class BusinessSettingController extends Controller
         $this->authorizeShopOwner();
 
         $validated = $request->validate([
-            'currency' => ['required', 'string', 'max:10'],
+            'currency' => ['required', 'string', 'max:3', 'regex:/^[A-Za-z]{3}$/'],
             'currency_symbol' => ['required', 'string', 'max:5'],
-            'delivery_fee' => ['required', 'numeric', 'min:0'],
-            'free_shipping_threshold' => ['required', 'numeric', 'min:0'],
+            'delivery_fee' => ['required', 'numeric', 'min:0', 'regex:/^\d+(?:\.\d{1,2})?$/'],
+            'free_shipping_threshold' => ['required', 'numeric', 'min:0', 'regex:/^\d+(?:\.\d{1,2})?$/'],
             'cod_enabled' => ['nullable', 'boolean'],
             'store_address' => ['nullable', 'string', 'max:500'],
             'customer_support_phone' => ['nullable', 'string', 'max:50'],
             'tax_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
+
+        app(CurrencyPolicy::class)->assertCanSet(strtoupper($validated['currency']));
 
         $deliveryFeeMinor = (int) round(((float) $validated['delivery_fee']) * 100);
         $thresholdMinor = (int) round(((float) $validated['free_shipping_threshold']) * 100);
@@ -173,8 +176,8 @@ class BusinessSettingController extends Controller
 
         AdminAuditLog::record(
             'branch.delete',
-            "Deleted branch '{$name}'.",
-            ['name' => $name, 'company_id' => $branch->company_id]
+            "Deleted branch #{$branch->id}.",
+            ['branch_id' => $branch->id, 'company_id' => $branch->company_id]
         );
 
         return redirect()->route('admin.settings.features')->with('success', "Branch '{$name}' deleted.");

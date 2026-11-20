@@ -87,7 +87,7 @@
                                     @php
                                         $spentMinor = $spendTotals[$customer->id] ?? 0;
                                     @endphp
-                                    ${{ number_format($spentMinor / 100, 2) }}
+                                    {{ \App\Facades\Settings::get('shop.currency', 'USD') }} {{ number_format($spentMinor / 100, 2) }}
                                 </td>
                                 <td class="px-3 py-3.5 text-center font-bold text-[#69736B]">
                                     {{ $customer->pet_listings_count }}

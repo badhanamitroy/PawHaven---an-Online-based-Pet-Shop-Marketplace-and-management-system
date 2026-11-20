@@ -17,8 +17,8 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::Pending => 'Pending Review',
-            self::Processing => 'Processing & Packed',
-            self::Shipped => 'Out for Delivery',
+            self::Processing => 'Processing',
+            self::Shipped => 'Dispatched / In Delivery',
             self::Delivered => 'Delivered',
             self::Cancelled => 'Cancelled',
         };

@@ -1,7 +1,7 @@
 # PawHaven — Existing Project Comprehensive Audit Report
 
 **Report Date:** October 30, 2026  
-**Audited Location:** `D:\PawHaven\PH Web Version\WebApp`  
+**Audited Location:** `<project-root>`
 **Platform Nature:** Self-hosted, source-code-licensed pet commerce and adoption/rescue platform (Non-SaaS, No Veterinary/Medical Features)  
 **Audit Mode:** Non-Destructive, Evidence-Based, Read-Only First  
 
@@ -173,7 +173,7 @@ erDiagram
 - **Muted Slate (`#69736B`):** Supporting copy, secondary icons, metadata tags.
 
 ### Logo Assets & Destination Verification
-- **Source Directory:** `D:\PawHaven\PawHaven Logos\`
+- **Source Directory:** `<repository-root>\PawHaven Logos\`
   - `PawHeaven-Green-logo.png` (156,938 bytes)
   - `PawHeaven-NavyBlue-logo.png` (256,962 bytes)
   - `PawHeaven-White-logo.png` (124,497 bytes)

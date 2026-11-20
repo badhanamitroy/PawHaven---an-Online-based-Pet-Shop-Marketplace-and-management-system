@@ -119,7 +119,7 @@
                                     </td>
                                     <td class="py-3 px-4 font-semibold text-[#202820]">
                                         @if($order->total_minor > 0)
-                                            ${{ number_format($order->total_minor / 100, 2) }}
+                                            {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}
                                         @else
                                             <span class="text-emerald-700 font-semibold">Free Adoption</span>
                                         @endif

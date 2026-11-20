@@ -18,7 +18,7 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertOk()
-            ->assertDontSee('your-email@pawhaven.com')
+            ->assertDontSee('your-email@example.test')
             ->assertDontSee('placeholder=')
             ->assertDontSee('value="');
     }

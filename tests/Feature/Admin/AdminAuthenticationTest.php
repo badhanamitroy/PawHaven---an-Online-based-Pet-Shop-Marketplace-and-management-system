@@ -168,7 +168,7 @@ class AdminAuthenticationTest extends TestCase
         Mail::fake();
 
         $seller = User::factory()->create([
-            'email' => 'seller@pawhaven.com',
+            'email' => 'seller@example.test',
             'role' => 'seller',
         ]);
 
@@ -215,7 +215,7 @@ class AdminAuthenticationTest extends TestCase
     public function test_customer_cannot_authenticate_via_admin_login(): void
     {
         $customer = User::factory()->create([
-            'email' => 'customer@pawhaven.com',
+            'email' => 'customer@example.test',
             'role' => 'customer',
         ]);
 

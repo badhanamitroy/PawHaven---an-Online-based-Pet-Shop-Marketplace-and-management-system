@@ -302,7 +302,7 @@
                             <div class="flex items-baseline gap-2 mt-1">
                                 @if($listing->listing_type === \App\Enums\PetListingType::Sale)
                                     <span class="text-3xl sm:text-4xl font-extrabold text-[#173F32]">
-                                        ${{ number_format(($listing->price_minor ?? 0) / 100, 2) }}
+                                        {{ $listing->currency }} {{ number_format(($listing->price_minor ?? 0) / 100, 2) }}
                                     </span>
                                     <span class="text-xs text-[#69736B]">Cash on Delivery / Direct Handover</span>
                                 @else
@@ -548,7 +548,7 @@
                                     <div class="mt-3 pt-3 border-t border-[#202820]/10 flex items-center justify-between">
                                         <span class="text-xs font-bold text-[#173F32]">
                                             @if($rel->listing_type === \App\Enums\PetListingType::Sale && $rel->price_minor)
-                                                ${{ number_format($rel->price_minor / 100, 2) }}
+                                                {{ $rel->currency }} {{ number_format($rel->price_minor / 100, 2) }}
                                             @else
                                                 <span class="text-[#245C45]">Adoption</span>
                                             @endif

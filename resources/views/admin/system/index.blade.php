@@ -42,7 +42,7 @@
                             @if($checks['app']['debug'])
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Enabled (local dev)</span>
                             @else
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Disabled (production ready)</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Disabled (recommended)</span>
                             @endif
                         </dd>
                     </div>
@@ -81,9 +81,42 @@
                         <dd class="font-semibold text-[#173F32]">{{ $checks['database']['tables'] }} tables active</dd>
                     </div>
                     <div class="flex justify-between">
-                        <dt class="text-[#69736B]">Zero SaaS Storage</dt>
-                        <dd class="font-semibold text-emerald-700">100% Local / Self-Hosted</dd>
+                        <dt class="text-[#69736B]">Application Schema</dt>
+                        <dd class="font-semibold {{ $checks['database']['schema_ready'] ? 'text-emerald-700' : 'text-amber-700' }}">
+                            {{ $checks['database']['schema_ready'] ? 'Current' : 'Review required' }}
+                        </dd>
                     </div>
+                    <div class="flex justify-between">
+                        <dt class="text-[#69736B]">Migration History</dt>
+                        <dd class="font-semibold text-[#173F32]">{{ str_replace('_', ' ', ucfirst($checks['database']['migration_state'])) }}</dd>
+                    </div>
+                    @if ($checks['database']['pending_migrations'] > 0)
+                        <div class="flex justify-between">
+                            <dt class="text-[#69736B]">Pending Migrations</dt>
+                            <dd class="font-semibold text-amber-700">{{ $checks['database']['pending_migrations'] }}</dd>
+                        </div>
+                    @endif
+                    @if ($checks['database']['unknown_applied_migrations'] > 0)
+                        <div class="flex justify-between">
+                            <dt class="text-[#69736B]">Unknown Applied Migrations</dt>
+                            <dd class="font-semibold text-amber-700">{{ $checks['database']['unknown_applied_migrations'] }}</dd>
+                        </div>
+                    @endif
+                    @if ($checks['database']['missing_tables'] !== [] || $checks['database']['missing_columns'] !== [])
+                        <div class="p-2 rounded bg-amber-50 text-amber-900 text-[11px] space-y-1">
+                            @if ($checks['database']['missing_tables'] !== [])
+                                <p>Missing tables: {{ implode(', ', $checks['database']['missing_tables']) }}</p>
+                            @endif
+                            @if ($checks['database']['missing_columns'] !== [])
+                                <p>Missing columns: {{ implode(', ', $checks['database']['missing_columns']) }}</p>
+                            @endif
+                        </div>
+                    @endif
+                    @if (! $checks['database']['schema_ready'])
+                        <p class="p-2 rounded bg-sky-50 text-sky-900 text-[11px]">
+                            Confirm the active database, inspect <code>php artisan migrate:status</code>, and verify a backup before applying any migration. This page never changes the schema.
+                        </p>
+                    @endif
                     @if($checks['database']['error'])
                         <div class="p-2 rounded bg-rose-50 text-rose-800 text-[11px]">
                             {{ $checks['database']['error'] }}
@@ -163,7 +196,7 @@
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-[#69736B]">Sender Address</dt>
-                        <dd class="font-semibold text-[#173F32] truncate max-w-[150px]">{{ $checks['mail']['from_address'] ?? 'Default' }}</dd>
+                        <dd class="font-semibold text-[#173F32]">{{ $checks['mail']['from_address_configured'] ? 'Configured' : 'Missing' }}</dd>
                     </div>
                     <div class="text-[11px] text-[#69736B] pt-1 border-t border-[#202820]/5">
                         Passwords and SMTP keys are never exposed in administrative views.
@@ -196,39 +229,39 @@
             </div>
         </div>
 
-        {{-- Production Readiness Guidance --}}
+        {{-- Operational Readiness Guidance --}}
         <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#202820]/10 shadow-xs space-y-4">
-            <h2 class="text-lg font-bold text-[#173F32]">Production Readiness Checklist</h2>
+            <h2 class="text-lg font-bold text-[#173F32]">Operational Readiness Notes</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div class="flex items-start gap-3 p-4 rounded-2xl bg-[#FAF8F2] border border-[#202820]/10">
-                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">✓</span>
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold">1</span>
                     <div>
-                        <span class="font-bold text-[#173F32]">Independent Self-Hosting</span>
-                        <p class="text-[#69736B] mt-0.5">PawHaven runs entirely on the buyer's server. No remote activation calls, external telemetry, or vendor lock-in.</p>
+                        <span class="font-bold text-[#173F32]">Production Configuration</span>
+                        <p class="text-[#69736B] mt-0.5">Before launch, review debug mode, HTTPS, secure session cookies, mail delivery, and private storage permissions.</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-3 p-4 rounded-2xl bg-[#FAF8F2] border border-[#202820]/10">
-                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">✓</span>
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold">2</span>
                     <div>
-                        <span class="font-bold text-[#173F32]">Strict Access Control</span>
-                        <p class="text-[#69736B] mt-0.5">All administrative operations require staff or admin privileges. Sellers and customers cannot escalate roles or access governance.</p>
+                        <span class="font-bold text-[#173F32]">First Shop Owner</span>
+                        <p class="text-[#69736B] mt-0.5">The Platform Administrator and Shop Owner are separate. Use Business Management to assign the first verified owner after installation.</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-3 p-4 rounded-2xl bg-[#FAF8F2] border border-[#202820]/10">
-                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">✓</span>
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold">3</span>
                     <div>
-                        <span class="font-bold text-[#173F32]">Audit Logging</span>
-                        <p class="text-[#69736B] mt-0.5">Every administrative change to brand settings, homepage layout, moderation, and user roles is permanently recorded.</p>
+                        <span class="font-bold text-[#173F32]">Safe Schema Upgrades</span>
+                        <p class="text-[#69736B] mt-0.5">Check migration status and create a verified backup before an upgrade. Never use reset, refresh, or fresh migrations on live data.</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-3 p-4 rounded-2xl bg-[#FAF8F2] border border-[#202820]/10">
-                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">✓</span>
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold">4</span>
                     <div>
-                        <span class="font-bold text-[#173F32]">Static Analysis Standard</span>
-                        <p class="text-[#69736B] mt-0.5">Application code passes strict PHPStan Level 7 static analysis and Laravel Pint PSR-12 code style standards.</p>
+                        <span class="font-bold text-[#173F32]">Release Validation</span>
+                        <p class="text-[#69736B] mt-0.5">This page does not run tests. Execute the documented validation suite on the release and target database before deploying.</p>
                     </div>
                 </div>
             </div>

@@ -148,10 +148,10 @@
                                 </td>
                                 <td class="px-3 py-3 text-[#202820]">
                                     @if($product->sale_price_minor)
-                                        <div class="font-bold text-[#245C45]">${{ number_format($product->sale_price_minor / 100, 2) }}</div>
-                                        <div class="text-[10px] text-gray-400 line-through">${{ number_format($product->price_minor / 100, 2) }}</div>
+                                        <div class="font-bold text-[#245C45]">{{ $product->currency }} {{ number_format($product->sale_price_minor / 100, 2) }}</div>
+                                        <div class="text-[10px] text-gray-400 line-through">{{ $product->currency }} {{ number_format($product->price_minor / 100, 2) }}</div>
                                     @else
-                                        <div class="font-bold text-[#202820]">${{ number_format($product->price_minor / 100, 2) }}</div>
+                                        <div class="font-bold text-[#202820]">{{ $product->currency }} {{ number_format($product->price_minor / 100, 2) }}</div>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3">
@@ -170,15 +170,23 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-3">
-                                    @if($product->is_published)
+                                    @if($product->archived_at !== null)
+                                        <span class="inline-flex items-center rounded-md bg-gray-200 px-2 py-1 text-[11px] font-semibold text-gray-700">Archived</span>
+                                    @elseif($product->is_published)
                                         <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">Live</span>
                                     @else
-                                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600 ring-1 ring-inset ring-gray-500/20">Draft</span>
+                                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600 ring-1 ring-inset ring-gray-500/20">Unpublished</span>
                                     @endif
                                 </td>
                                 @can('create', \App\Models\Product::class)
                                 <td class="py-3 pl-3 pr-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
+                                        @if($product->archived_at === null)
+                                        <form method="POST" action="{{ route('admin.products.archive', $product) }}" onsubmit="return confirm('Archive this product? Existing order and stock history will be retained.');">
+                                            @csrf
+                                            <button class="rounded-lg border border-amber-300 px-2 py-1 text-[10px] font-semibold text-amber-800">Archive</button>
+                                        </form>
+                                        @endif
                                         @can('update', $product)
                                         <a
                                             href="{{ route('admin.products.edit', $product) }}"

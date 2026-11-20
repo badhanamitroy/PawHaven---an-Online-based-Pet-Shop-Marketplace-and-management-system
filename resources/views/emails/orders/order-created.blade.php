@@ -17,7 +17,7 @@
         </div>
         <div><strong>Status:</strong> <span style="color: #D97706; font-weight: 700;">{{ $order->status->label() }}</span></div>
         <div><strong>Payment Method:</strong> Cash on Delivery (COD)</div>
-        <div><strong>Total Amount:</strong> ${{ number_format($order->total_minor / 100, 2) }}</div>
+        <div><strong>Total Amount:</strong> {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}</div>
         <div><strong>Delivery Address:</strong> {{ $order->shipping_address }}, {{ $order->shipping_city }}</div>
     </div>
 

@@ -30,6 +30,7 @@
                         required
                         class="w-full uppercase font-mono rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
                     />
+                    <p class="mt-1 text-[11px] text-[#69736B]">Supported: USD, BDT, CAD, EUR (two decimal places). Currency is locked after monetary records exist; changing historical amounts requires a reviewed data migration.</p>
                     @error('currency')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
@@ -61,7 +62,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                     <label for="delivery_fee" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Flat Standard Delivery Fee ($) <span class="text-red-500">*</span>
+                        Flat Standard Delivery Fee ({{ $settings['shop.currency'] ?? 'USD' }}) <span class="text-red-500">*</span>
                     </label>
                     @php
                         $feeMinor = (int) ($settings['shop.delivery_fee_minor'] ?? 500);
@@ -82,7 +83,7 @@
 
                 <div>
                     <label for="free_shipping_threshold" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Free Shipping Threshold ($) <span class="text-red-500">*</span>
+                        Free Shipping Threshold ({{ $settings['shop.currency'] ?? 'USD' }}) <span class="text-red-500">*</span>
                     </label>
                     @php
                         $threshMinor = (int) ($settings['shop.free_shipping_threshold_minor'] ?? 4900);

@@ -8,12 +8,14 @@ use App\Http\Middleware\RestoreUserDeviceSession;
 use App\Console\Commands\BusinessPreflightCommand;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Bootstrap\LoadConfiguration;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Tests\Support\TestDatabaseGuard;
 
-return Application::configure(basePath: dirname(__DIR__))
+$application = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -74,3 +76,15 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.page', ['status' => $status], $status);
         });
     })->create();
+
+if (class_exists(TestDatabaseGuard::class)
+    && TestDatabaseGuard::isTestRunnerProcess($_SERVER['argv'] ?? [])) {
+    $application->afterBootstrapping(
+        LoadConfiguration::class,
+        static function (Application $application): void {
+            TestDatabaseGuard::assertSafeApplication($application);
+        },
+    );
+}
+
+return $application;

@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer-core';
 import path from 'path';
+import { BASE_URL, CHROME_PATH, qaCredentials, WEBAPP_ROOT } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
+const credentials = qaCredentials('customer');
 
 async function captureResponsive() {
     const browser = await puppeteer.launch({
@@ -14,8 +14,8 @@ async function captureResponsive() {
     try {
         const page = await browser.newPage();
         await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'customer@pawhaven.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
+        await page.type('input[name="email"]', credentials.email);
+        await page.type('input[name="password"]', credentials.password);
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),
             page.click('button[type="submit"]')
@@ -25,7 +25,7 @@ async function captureResponsive() {
             await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle2' });
         }
 
-        const outDir = 'D:\\PawHaven\\PH Web Version\\WebApp\\docs\\qa\\screenshots\\11-responsive-views';
+        const outDir = path.join(WEBAPP_ROOT, 'docs', 'qa', 'screenshots', '11-responsive-views');
 
         // Tablet 768x1024
         await page.setViewport({ width: 768, height: 1024 });

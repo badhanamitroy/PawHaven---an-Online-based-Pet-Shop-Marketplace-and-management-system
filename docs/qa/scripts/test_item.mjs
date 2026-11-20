@@ -1,15 +1,18 @@
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH, BASE_URL, qaCredentials } from './qa-config.mjs';
+
+const credentials = qaCredentials('customer');
 
 async function testItem() {
     const browser = await puppeteer.launch({
-        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        executablePath: CHROME_PATH,
         headless: 'new',
         args: ['--no-sandbox']
     });
     const page = await browser.newPage();
-    await page.goto('http://127.0.0.1:8000/login');
-    await page.type('input[name="email"]', 'customer@pawhaven.com');
-    await page.type('input[name="password"]', 'CustomerPassword123!');
+    await page.goto(`${BASE_URL}/login`);
+    await page.type('input[name="email"]', credentials.email);
+    await page.type('input[name="password"]', credentials.password);
     await Promise.all([
         page.waitForNavigation(),
         page.click('button[type="submit"]')

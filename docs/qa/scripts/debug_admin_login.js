@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core';
+import { BASE_URL, CHROME_PATH, qaCredentials } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
+const credentials = qaCredentials('admin');
 
 async function testAdmin() {
     const browser = await puppeteer.launch({
@@ -15,8 +15,8 @@ async function testAdmin() {
         await page.goto(`${BASE_URL}/admin/login`, { waitUntil: 'networkidle2' });
         console.log('On page:', page.url());
 
-        await page.type('input[name="email"]', 'badhanamitroy571@gmail.com');
-        await page.type('input[name="password"]', 'AdminPassword123!');
+        await page.type('input[name="email"]', credentials.email);
+        await page.type('input[name="password"]', credentials.password);
         
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),

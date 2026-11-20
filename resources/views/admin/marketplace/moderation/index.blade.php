@@ -68,7 +68,7 @@
                                     Seller: <strong class="text-[#173F32]">{{ $listing->seller?->name }}</strong> ({{ $listing->seller?->email }}) &bull;
                                     Price: <strong class="text-[#245C45]">
                                         @if($listing->price_minor)
-                                            ${{ number_format($listing->price_minor / 100, 2) }}
+                                            {{ $listing->currency }} {{ number_format($listing->price_minor / 100, 2) }}
                                         @else
                                             Free / Adoption
                                         @endif

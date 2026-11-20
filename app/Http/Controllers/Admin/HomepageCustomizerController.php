@@ -132,7 +132,7 @@ class HomepageCustomizerController extends Controller
             ->get();
 
         $featuredProducts = Product::query()
-            ->where('is_published', true)
+            ->published()
             ->with('category')
             ->latest()
             ->take(4)

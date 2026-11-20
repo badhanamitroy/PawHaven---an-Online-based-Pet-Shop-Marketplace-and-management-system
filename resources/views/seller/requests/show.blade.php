@@ -74,7 +74,7 @@
                                 </p>
                                 <div class="mt-2 text-sm font-semibold text-[#202820]">
                                     @if($order->total_minor > 0)
-                                        Price: ${{ number_format($order->total_minor / 100, 2) }}
+                                        Price: {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}
                                     @else
                                         <span class="text-emerald-700">Free Ethical Adoption / Rehoming</span>
                                     @endif
@@ -86,7 +86,7 @@
                             @foreach($order->items as $item)
                                 <div class="flex justify-between py-1">
                                     <span class="font-medium text-[#202820]">{{ $item->product_name }}</span>
-                                    <span class="font-semibold">${{ number_format($item->subtotal_minor / 100, 2) }}</span>
+                                    <span class="font-semibold">{{ $order->currency }} {{ number_format($item->subtotal_minor / 100, 2) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -229,7 +229,7 @@
                         </div>
                     @endif
 
-                    @if($order->payment_status !== \App\Enums\PaymentStatus::Paid)
+                    @if($order->payment_status !== \App\Enums\PaymentStatus::Paid && $order->total_minor > 0 && $order->payment_method !== 'inquiry')
                         <form method="POST" action="{{ route('seller.requests.payment', $order) }}" class="pt-3 border-t border-[#202820]/10 space-y-3">
                             @csrf
                             @method('PATCH')
@@ -249,8 +249,9 @@
                             </div>
 
                             <button type="submit" class="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors shadow-xs">
-                                &check; Verify &amp; Record Payment
+                                &check; Confirm receipt for this marketplace order
                             </button>
+                            <p class="text-[11px] leading-5 text-[#69736B]">This records your explicit confirmation for your own Marketplace Seller order. Delivery status alone never marks the payment paid.</p>
                         </form>
                     @endif
                 </div>

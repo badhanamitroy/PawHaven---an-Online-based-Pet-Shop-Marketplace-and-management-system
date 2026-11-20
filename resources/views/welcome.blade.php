@@ -34,7 +34,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
 </head>
-<body class="bg-[#FAF8F2] text-[#202820] font-sans antialiased selection:bg-[#245C45] selection:text-white" x-data="{ mobileOpen: false, buyModalOpen: false, buyProduct: { id: '', name: '', price: '' } }">
+    <body class="bg-[#FAF8F2] text-[#202820] font-sans antialiased selection:bg-[#245C45] selection:text-white" x-data="{ mobileOpen: false, buyModalOpen: false, buySubmissionKey: '', buyQuoteMessage: '', priceChangeNeedsAcceptance: false, priceChangeAccepted: false, buyProduct: { id: '', name: '', price: '', signature: '', issuedAt: '', breakdown: '' }, async refreshBuyQuote(form) { const previousSignature = this.buyProduct.signature; const data = new FormData(form); try { const response = await fetch('{{ route('orders.quote') }}', { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': data.get('_token') }, body: data }); const quote = await response.json(); if (!response.ok) throw new Error(quote.message || 'Price could not be confirmed.'); if (previousSignature && previousSignature !== quote.signature) { this.priceChangeNeedsAcceptance = true; this.priceChangeAccepted = false; } this.buyProduct.price = quote.currency + ' ' + (quote.total_minor / 100).toFixed(2); this.buyProduct.issuedAt = quote.issued_at; const details = []; if (quote.promotion_discount_minor > 0) details.push('Promotion: −' + quote.currency + ' ' + (quote.promotion_discount_minor / 100).toFixed(2)); if (quote.coupon_discount_minor > 0) details.push('Coupon: −' + quote.currency + ' ' + (quote.coupon_discount_minor / 100).toFixed(2)); details.push('Delivery: ' + quote.currency + ' ' + (quote.delivery_fee_minor / 100).toFixed(2)); this.buyProduct.breakdown = details.join(' · '); this.buyProduct.signature = quote.signature; this.buyQuoteMessage = ''; } catch (error) { this.buyProduct.signature = ''; this.buyQuoteMessage = error.message; } } }">
+    @if($errors->has('pricing_signature'))
+        <div role="alert" class="border-b border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">The price changed before checkout. Reopen the purchase form and review the current total before confirming.</div>
+    @endif
 
     @if(!empty($isDraftPreview))
     {{-- Administrator Draft Preview Banner --}}
@@ -517,7 +520,7 @@
                                                 <span class="text-[11px] uppercase tracking-wider text-[#69736B] font-semibold block">Price / Rehoming</span>
                                                 <span class="text-base font-bold text-[#173F32]">
                                                     @if($listing->price_minor)
-                                                        ${{ number_format($listing->price_minor / 100, 2) }}
+                                                        {{ $listing->currency }} {{ number_format($listing->price_minor / 100, 2) }}
                                                     @else
                                                         <span class="text-[#245C45] font-semibold text-sm">Adoption / Free</span>
                                                     @endif
@@ -692,7 +695,10 @@
                                 </div>
                                 <div class="p-4 pt-0">
                                     <div class="flex items-baseline justify-between mb-3">
-                                        <span class="text-lg font-bold text-[#173F32]">${{ number_format(($product->sale_price_minor ?? $product->price_minor) / 100, 2) }}</span>
+                                        <span class="text-lg font-bold text-[#173F32]">{{ $product->currency }} {{ number_format(($product->display_price_minor ?? $product->sale_price_minor ?? $product->price_minor) / 100, 2) }}</span>
+                                        @if(($product->display_promotion_discount_minor ?? 0) > 0)
+                                            <span class="text-[11px] text-[#69736B] line-through">{{ $product->currency }} {{ number_format(($product->display_resolved_price_minor ?? $product->sale_price_minor ?? $product->price_minor) / 100, 2) }}</span>
+                                        @endif
                                         <span class="text-[11px] text-[#69736B]">Direct PawHaven Item</span>
                                     </div>
                                     @guest
@@ -707,7 +713,7 @@
                                         @if($product->stock_quantity > 0)
                                             <button
                                                 type="button"
-                                                @click="buyProduct = { id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: '${{ number_format(($product->sale_price_minor ?? $product->price_minor) / 100, 2) }}' }; buyModalOpen = true;"
+                                                @click="buyProduct = { id: {{ $product->id }}, name: @js($product->name), price: @js($product->currency.' '.number_format(($product->display_total_minor ?? $product->display_price_minor ?? $product->sale_price_minor ?? $product->price_minor) / 100, 2)), signature: @js($product->pricing_signature ?? ''), issuedAt: @js($product->pricing_issued_at ?? ''), breakdown: @js($product->display_price_details ?? '') }; buySubmissionKey = crypto.randomUUID(); buyQuoteMessage = ''; priceChangeNeedsAcceptance = false; priceChangeAccepted = false; buyModalOpen = true; $nextTick(() => refreshBuyQuote(document.getElementById('buy-order-form')));"
                                                 class="w-full inline-flex items-center justify-center py-2.5 px-3 rounded-xl text-xs font-semibold text-white bg-[#245C45] hover:bg-[#173F32] shadow-xs transition-colors"
                                             >
                                                 <span>Request to Buy &rarr;</span>
@@ -1386,18 +1392,27 @@
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('orders.request') }}" class="space-y-4">
+            <form id="buy-order-form" method="POST" action="{{ route('orders.request') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="product_id" :value="buyProduct.id">
+                <input type="hidden" name="submission_key" :value="buySubmissionKey">
+                <input type="hidden" name="pricing_signature" :value="buyProduct.signature">
+                <input type="hidden" name="pricing_issued_at" :value="buyProduct.issuedAt">
+                <input type="hidden" name="accepted_pricing_signature" :value="!priceChangeNeedsAcceptance || priceChangeAccepted ? buyProduct.signature : ''">
 
                 {{-- Product Summary Card --}}
                 <div class="p-4 rounded-2xl bg-[#FAF8F2] border border-[#202820]/10 flex items-center justify-between">
                     <div>
                         <span class="text-xs font-bold text-[#173F32] block" x-text="buyProduct.name"></span>
-                        <span class="text-[11px] text-[#69736B]">Payment: Cash on Delivery (COD)</span>
+                        <span class="text-[11px] text-[#69736B]">Estimated order total including current delivery charge · Cash on Delivery</span>
                     </div>
                     <span class="text-base font-bold text-[#245C45]" x-text="buyProduct.price"></span>
                 </div>
+                <p class="text-[11px] text-[#69736B]" x-text="buyProduct.breakdown"></p>
+                <label x-show="priceChangeNeedsAcceptance" class="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                    <input type="checkbox" class="mt-0.5 rounded border-amber-500" x-model="priceChangeAccepted">
+                    <span>The price changed. I reviewed and accept the updated total shown above.</span>
+                </label>
 
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-[#69736B] mb-1.5">Quantity</label>
@@ -1407,9 +1422,16 @@
                         min="1"
                         max="10"
                         value="1"
+                        @change="$root.refreshBuyQuote($event.target.form)"
                         class="w-full px-4 py-2.5 rounded-xl border border-[#202820]/15 bg-[#FAF8F2] text-sm text-[#202820] focus:ring-2 focus:ring-[#245C45] focus:bg-white focus:outline-none"
                         required
                     >
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#69736B] mb-1.5">Coupon code (optional)</label>
+                    <input type="text" name="coupon_code" maxlength="48" @change="$root.refreshBuyQuote($event.target.form)" class="w-full px-4 py-2.5 rounded-xl border border-[#202820]/15 bg-[#FAF8F2] text-sm uppercase" autocomplete="off">
+                    <p class="mt-1 text-xs text-rose-700" x-show="buyQuoteMessage" x-text="buyQuoteMessage"></p>
                 </div>
 
                 <div>
@@ -1466,7 +1488,8 @@
                     </button>
                     <button
                         type="submit"
-                        class="px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-[#245C45] hover:bg-[#173F32] shadow-sm transition-all"
+                        :disabled="!buyProduct.signature || (priceChangeNeedsAcceptance && !priceChangeAccepted)"
+                        class="px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-[#245C45] hover:bg-[#173F32] shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Confirm Buy Request &rarr;
                     </button>

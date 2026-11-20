@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer-core';
 import path from 'path';
+import { BASE_URL, CHROME_PATH, qaCredentials, WEBAPP_ROOT } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
+const credentials = qaCredentials('customer');
 
 async function main() {
     const browser = await puppeteer.launch({
@@ -18,8 +18,8 @@ async function main() {
         console.log('Navigating to login...');
         await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle2' });
 
-        await page.type('input[name="email"]', 'customer@pawhaven.com');
-        await page.type('input[name="password"]', 'CustomerPassword123!');
+        await page.type('input[name="email"]', credentials.email);
+        await page.type('input[name="password"]', credentials.password);
 
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),
@@ -57,7 +57,7 @@ async function main() {
         await page.screenshot({ path: outDesktop, fullPage: true });
         console.log('Saved desktop screenshot:', outDesktop);
 
-        const outQADesktop = 'D:\\PawHaven\\PH Web Version\\WebApp\\docs\\qa\\screenshots\\05-customer-portal\\CUST-01-dashboard-overview.png';
+        const outQADesktop = path.join(WEBAPP_ROOT, 'docs', 'qa', 'screenshots', '05-customer-portal', 'CUST-01-dashboard-overview.png');
         await page.screenshot({ path: outQADesktop, fullPage: true });
         console.log('Updated QA screenshot:', outQADesktop);
 

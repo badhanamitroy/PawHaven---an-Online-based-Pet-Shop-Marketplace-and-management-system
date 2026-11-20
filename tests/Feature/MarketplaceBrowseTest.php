@@ -103,7 +103,7 @@ class MarketplaceBrowseTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Happy Labrador Pup')
-            ->assertSee('$500.00')
+            ->assertSee('USD 500.00')
             ->assertSee('Labrador')
             ->assertSee('Alice Shelter')
             ->assertSee('Log In to Submit Purchase Request');
@@ -178,6 +178,9 @@ class MarketplaceBrowseTest extends TestCase
 
         $order = Order::where('user_id', $customer->id)->first();
         $this->assertNotNull($order);
+        $this->assertSame($listing->seller_id, $order->seller_id);
+        $this->assertNull($order->employee_seller_id);
+        $this->assertSame(\App\Enums\SalesChannel::Online, $order->sales_channel);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'product_name' => 'Champion Line Poodle',
@@ -189,6 +192,30 @@ class MarketplaceBrowseTest extends TestCase
         $dashResponse->assertOk()
             ->assertSee('Champion Line Poodle')
             ->assertSee($order->order_number);
+    }
+
+    public function test_marketplace_purchase_rejects_listing_price_outside_order_column_range(): void
+    {
+        $seller = User::factory()->create(['role' => 'seller']);
+        $customer = User::factory()->create(['role' => 'customer']);
+        $category = PetCategory::create(['name' => 'Dogs', 'slug' => 'dogs']);
+        $listing = PetListing::factory()->create([
+            'seller_id' => $seller->id,
+            'pet_category_id' => $category->id,
+            'title' => 'High value listing',
+            'listing_type' => PetListingType::Sale,
+            'price_minor' => 4_294_967_296,
+            'status' => PetListingStatus::Published,
+        ]);
+
+        $this->actingAs($customer)->post(route('listings.purchase', $listing), [
+            'customer_phone' => '+1 (555) 111-0000',
+            'shipping_city' => 'Seattle',
+            'shipping_address' => '123 Test Street',
+        ])->assertSessionHasErrors('listing');
+
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertDatabaseCount('order_items', 0);
     }
 
     public function test_customer_can_submit_adoption_inquiry_for_rescue_pet(): void
@@ -274,7 +301,7 @@ class MarketplaceBrowseTest extends TestCase
         $response = $this->get(route('home'));
         $response->assertOk()
             ->assertSee('Commercial Golden Pup')
-            ->assertSee('$800.00')
+            ->assertSee('USD 800.00')
             ->assertSee('Sweet Rescue Mutt')
             ->assertSee('Ready for Adoption & Foster Care');
     }

@@ -118,7 +118,7 @@
             {{-- Delivered Sales Revenue --}}
             <div class="bg-white rounded-2xl p-6 border border-[#202820]/10 shadow-xs">
                 <span class="text-xs font-semibold uppercase tracking-wider text-[#69736B]">Confirmed Revenue</span>
-                <div class="text-2xl font-bold text-[#173F32] mt-2">${{ number_format($totalSalesMinor / 100, 2) }}</div>
+                <div class="text-2xl font-bold text-[#173F32] mt-2">{{ \App\Facades\Settings::get('shop.currency', 'USD') }} {{ number_format($totalSalesMinor / 100, 2) }}</div>
                 <span class="text-xs text-[#69736B] block mt-2">{{ $deliveredOrders }} completed orders</span>
             </div>
         </div>
@@ -149,7 +149,7 @@
                                     <a href="{{ route('admin.orders.show', $order) }}" class="font-bold text-[#173F32] hover:underline">
                                         #{{ $order->order_number }}
                                     </a>
-                                    <div class="text-[#69736B] text-[11px]">{{ $order->customer_name }} &bull; ${{ number_format($order->total_minor / 100, 2) }}</div>
+                                    <div class="text-[#69736B] text-[11px]">{{ $order->customer_name }} &bull; {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}</div>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $order->status->badgeClasses() }}">

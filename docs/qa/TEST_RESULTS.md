@@ -156,5 +156,5 @@ This document presents the definitive test execution matrix, verification logs, 
 
 | Account | Registration Timestamp | Checkpoint URL | Status | Outcome |
 |:---|:---:|:---:|:---:|:---|
-| `badhancse28@gmail.com` | `2026-10-31T01:59:45Z` | `/email/verify` | **BLOCKED / AWAITING ACTION** | Real email verification notice dispatched via SMTP. User action required to click link in inbox. |
-| `badhanamitroy2nd@gmail.com` | `2026-10-31T02:00:05Z` | `/email/verify` | **BLOCKED / AWAITING ACTION** | Real merchant verification notice dispatched via SMTP. User action required to click link in inbox. |
+| `[redacted account]` | `2026-10-31T01:59:45Z` | `/email/verify` | **BLOCKED / AWAITING ACTION** | Real email verification notice dispatched via SMTP. User action required to click link in inbox. |
+| `[redacted account]` | `2026-10-31T02:00:05Z` | `/email/verify` | **BLOCKED / AWAITING ACTION** | Real merchant verification notice dispatched via SMTP. User action required to click link in inbox. |

@@ -298,7 +298,7 @@
                                     </td>
                                     <td class="py-3 px-4 font-medium text-[#202820]">
                                         @if($listing->listing_type === \App\Enums\PetListingType::Sale && $listing->price_minor)
-                                            ${{ number_format($listing->price_minor / 100, 2) }}
+                                            {{ $listing->currency }} {{ number_format($listing->price_minor / 100, 2) }}
                                         @else
                                             <span class="text-emerald-700 font-semibold">Free Adoption</span>
                                         @endif

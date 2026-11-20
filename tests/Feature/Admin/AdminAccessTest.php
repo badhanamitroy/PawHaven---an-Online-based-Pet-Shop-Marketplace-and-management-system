@@ -11,13 +11,16 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\Support\CreatesBusinessMemberships;
 use Tests\TestCase;
+use Tests\Support\SignsOnlineOrderQuote;
 
 class AdminAccessTest extends TestCase
 {
     use CreatesBusinessMemberships;
     use RefreshDatabase;
+    use SignsOnlineOrderQuote;
 
     public function test_guest_is_redirected_to_login_when_accessing_admin(): void
     {
@@ -292,7 +295,9 @@ class AdminAccessTest extends TestCase
 
         $response = $this->actingAs($customer)->post(route('orders.request'), [
             'product_id' => $product->id,
+            'submission_key' => (string) Str::uuid(),
             'quantity' => 2,
+            ...$this->onlinePricingFields($product, 2, null, $customer),
             'customer_phone' => '+1 555 123 4567',
             'shipping_address' => '123 Main St, Apt 2',
             'shipping_city' => 'Seattle',

@@ -108,12 +108,12 @@ This document defines the formal test specifications, preconditions, actions, an
 
 ### TC-AUTH-CUST-02: Customer Mandatory Email Verification Checkpoint
 - **Identifier:** `AUTH-CUST-02`
-- **Expected Result:** Upon registration of `badhancse28@gmail.com`, browser immediately lands on `/email/verify` with resend button.
+- **Expected Result:** Upon registration of `[redacted account]`, browser immediately lands on `/email/verify` with resend button.
 - **Evidence:** `docs/qa/screenshots/02-auth-customer/AUTH-CUST-02-email-verify-checkpoint.png`
 
 ### TC-AUTH-SELL-02: Seller Mandatory Email Verification Checkpoint
 - **Identifier:** `AUTH-SELL-02`
-- **Expected Result:** Upon registration of `badhanamitroy2nd@gmail.com`, browser immediately lands on `/email/verify`.
+- **Expected Result:** Upon registration of `[redacted account]`, browser immediately lands on `/email/verify`.
 - **Evidence:** `docs/qa/screenshots/03-auth-seller/AUTH-SELL-02-email-verify-checkpoint.png`
 
 ---

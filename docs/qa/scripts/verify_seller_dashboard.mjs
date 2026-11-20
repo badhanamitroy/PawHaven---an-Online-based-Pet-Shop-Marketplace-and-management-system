@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core';
+import { BASE_URL, CHROME_PATH, qaCredentials } from './qa-config.mjs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const BASE_URL = 'http://127.0.0.1:8000';
+const credentials = qaCredentials('seller');
 
 async function verifySeller() {
     const browser = await puppeteer.launch({
@@ -15,8 +15,8 @@ async function verifySeller() {
         await page.setViewport({ width: 1440, height: 900 });
 
         await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle2' });
-        await page.type('input[name="email"]', 'seller@pawhaven.com');
-        await page.type('input[name="password"]', 'SellerPassword123!');
+        await page.type('input[name="email"]', credentials.email);
+        await page.type('input[name="password"]', credentials.password);
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'networkidle2' }),
             page.click('button[type="submit"]')

@@ -1,7 +1,7 @@
 # PawHaven Phase 0 — Safety and Baseline Report
 
 **Recorded:** 2026-11-08  
-**Project:** `D:\PawHaven\PH Web Version\WebApp`  
+**Project:** `<project-root>`
 **Phase:** Step 0 only — no application-code implementation. This report is the approval gate before Step 0.5.
 
 ## 1. Scope and safety outcome
@@ -12,7 +12,7 @@ No `migrate`, `db:seed`, `migrate:fresh`, `db:wipe`, delete, reset, Git stage, c
 
 ## 2. Git and uncommitted-work safety baseline
 
-- Repository root: `D:\PawHaven\PH Web Version\WebApp`
+- Repository root: `<project-root>`
 - Branch: `master`
 - Initial `git status --short --branch`: **33 modified tracked files, 0 staged files, 281 untracked files** (314 porcelain entries, expanded with `-uall`).
 - Initial tracked diff: **33 files changed, 3,111 insertions, 479 deletions**.
@@ -24,7 +24,7 @@ No `migrate`, `db:seed`, `migrate:fresh`, `db:wipe`, delete, reset, Git stage, c
 
 Backups were written outside the project tree under:
 
-`C:\Users\Dell\.copilot\session-state\6ddfa72c-25bb-4595-b023-bc2da8efad81\files\pawhaven-phase-0-baseline-20261108\`
+`<local-user-path>`
 
 | Source | Backup | Verification |
 |---|---|---|
@@ -60,7 +60,7 @@ The backups are local session-state files, not project changes or a substitute f
 Command:
 
 ```powershell
-Set-Location 'D:\PawHaven\PH Web Version\WebApp'
+Set-Location '<project-root>'
 php artisan test --no-coverage
 ```
 
@@ -145,7 +145,7 @@ The earlier audit's browser capture observed a first fresh-tab request around 1.
 From PowerShell:
 
 ```powershell
-Set-Location 'D:\PawHaven\PH Web Version\WebApp'
+Set-Location '<project-root>'
 git status --short --branch
 php artisan --version
 php artisan route:list --except-vendor

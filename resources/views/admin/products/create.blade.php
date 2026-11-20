@@ -131,7 +131,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label for="price" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Regular Price ($) <span class="text-red-500">*</span>
+                        Regular Price ({{ \App\Facades\Settings::get('shop.currency', 'USD') }}) <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-500">$</span>
@@ -154,7 +154,7 @@
 
                 <div>
                     <label for="sale_price" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Sale / Discounted Price ($) <span class="text-gray-400 font-normal">(Optional)</span>
+                        Sale / Discounted Price ({{ \App\Facades\Settings::get('shop.currency', 'USD') }}) <span class="text-gray-400 font-normal">(Optional)</span>
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-500">$</span>

@@ -4,9 +4,12 @@
 
 @section('content')
 <div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold tracking-tight text-[#173F32]">Inventory &amp; Stock Alerts</h1>
-        <p class="text-xs text-[#69736B] mt-1">Real-time stock level monitoring and quick inventory adjustments for PawHaven Pet Shop.</p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-[#173F32]">Inventory &amp; Stock Alerts</h1>
+            <p class="text-xs text-[#69736B] mt-1">Current product stock by its company or branch inventory bucket.</p>
+        </div>
+        <a href="{{ route('admin.inventory.movements') }}" class="inline-flex w-fit items-center rounded-xl bg-[#245C45] px-4 py-2 text-xs font-semibold text-white">Stock movement history</a>
     </div>
 
     {{-- KPI Cards --}}
@@ -99,6 +102,7 @@
                     <thead class="border-b border-gray-100 bg-[#FAF8F2] text-[11px] font-bold uppercase tracking-wider text-[#69736B]">
                         <tr>
                             <th class="py-3.5 pl-6 pr-3">Product</th>
+                            <th class="px-3 py-3.5">Stock Branch</th>
                             <th class="px-3 py-3.5">Category</th>
                             <th class="px-3 py-3.5">SKU</th>
                             <th class="px-3 py-3.5">Stock Level</th>
@@ -111,8 +115,9 @@
                             <tr class="hover:bg-gray-50/70 transition-colors">
                                 <td class="py-3.5 pl-6 pr-3">
                                     <div class="font-bold text-[#173F32]">{{ $prod->name }}</div>
-                                    <div class="text-[11px] text-[#69736B]">${{ number_format($prod->price_minor / 100, 2) }}</div>
+                                    <div class="text-[11px] text-[#69736B]">{{ $prod->currency }} {{ number_format($prod->price_minor / 100, 2) }}</div>
                                 </td>
+                                <td class="px-3 py-3.5 text-[#69736B]">{{ $prod->branch?->name ?? 'Shared company stock' }}</td>
                                 <td class="px-3 py-3.5 text-[#69736B]">{{ $prod->category->name }}</td>
                                 <td class="px-3 py-3.5 font-mono text-[11px] text-[#173F32] font-semibold">{{ $prod->sku }}</td>
                                 <td class="px-3 py-3.5">
@@ -141,6 +146,7 @@
                                     >
                                         @csrf
                                         @method('PATCH')
+                                        <input type="hidden" name="adjustment_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
                                         <div class="flex items-center gap-1">
                                             <span class="text-[10px] text-gray-400 font-semibold">Qty:</span>
                                             <input
@@ -161,6 +167,14 @@
                                                 class="w-14 rounded-lg border border-gray-200 px-2 py-1 text-xs text-center text-[#202820] focus:border-[#245C45] focus:outline-none"
                                             />
                                         </div>
+                                        <input
+                                            type="text"
+                                            name="stock_adjustment_reason"
+                                            required
+                                            maxlength="1000"
+                                            placeholder="Adjustment reason"
+                                            class="w-36 rounded-lg border border-gray-200 px-2 py-1 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none"
+                                        />
                                         <button
                                             type="submit"
                                             class="rounded-lg bg-[#FAF8F2] border border-[#245C45]/20 px-2.5 py-1 text-[11px] font-bold text-[#173F32] hover:bg-[#245C45] hover:text-white transition-colors"

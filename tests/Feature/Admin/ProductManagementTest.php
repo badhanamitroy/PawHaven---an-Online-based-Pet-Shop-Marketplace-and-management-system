@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\Support\CreatesBusinessMemberships;
 use Tests\TestCase;
 
@@ -52,6 +53,11 @@ class ProductManagementTest extends TestCase
             'stock_quantity' => 50,
             'low_stock_threshold' => 10,
             'is_published' => true,
+        ]);
+        $this->assertDatabaseHas('inventory_movements', [
+            'movement_type' => 'opening',
+            'quantity_delta' => 50,
+            'quantity_after' => 50,
         ]);
 
         $this->assertDatabaseHas('admin_audit_logs', [
@@ -120,12 +126,18 @@ class ProductManagementTest extends TestCase
 
         $this->assertTrue($product->isLowStock());
 
-        $response = $this->actingAs($staff)->patch(route('admin.inventory.update', $product), [
+        $adjustmentKey = (string) Str::uuid();
+        $adjustmentPayload = [
             'stock_quantity' => 25,
             'low_stock_threshold' => 5,
-        ]);
+            'stock_adjustment_reason' => 'Cycle count correction',
+            'adjustment_key' => $adjustmentKey,
+        ];
+        $response = $this->actingAs($staff)->patch(route('admin.inventory.update', $product), $adjustmentPayload);
 
         $response->assertRedirect(route('admin.inventory.index'));
+        $this->patch(route('admin.inventory.update', $product), $adjustmentPayload)
+            ->assertRedirect(route('admin.inventory.index'));
 
         $product->refresh();
         $this->assertSame(25, $product->stock_quantity);
@@ -135,6 +147,14 @@ class ProductManagementTest extends TestCase
             'action' => 'inventory.adjust',
             'user_id' => $staff->id,
         ]);
+        $this->assertDatabaseHas('inventory_movements', [
+            'product_id' => $product->id,
+            'movement_type' => 'manual_adjustment',
+            'quantity_delta' => 21,
+            'quantity_after' => 25,
+            'note' => 'Cycle count correction',
+        ]);
+        $this->assertDatabaseCount('inventory_movements', 2);
     }
 
     public function test_cannot_delete_product_with_associated_order_items(): void

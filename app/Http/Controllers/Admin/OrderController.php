@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
+use App\Enums\FulfilmentAction;
+use App\Enums\FulfilmentStatus;
 use App\Http\Controllers\Controller;
-use App\Models\AdminAuditLog;
 use App\Models\Order;
-use App\Services\OrderInventoryService;
+use App\Services\BusinessAccessService;
+use App\Services\FulfilmentService;
+use App\Services\PaymentTransactionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -57,133 +58,56 @@ class OrderController extends Controller
     public function show(Order $order): View
     {
         Gate::authorize('view', $order);
-        $order->load(['items.product', 'user']);
+        $order->load(['items.product', 'productReturns.product', 'productReturns.orderItem', 'productReturns.requestedBy', 'productReturns.reviewedBy', 'productReturns.receivedBy', 'productReturns.events.actor', 'fulfilmentEvents.actor', 'user', 'paymentTransactions.recordedBy', 'paymentTransactions.verifiedBy', 'paymentTransactions.events.actor', 'paymentTransactions.refunds.initiatedBy', 'paymentTransactions.refunds.approvedBy', 'paymentTransactions.refunds.events.actor']);
+        $fulfilmentActions = app(FulfilmentService::class)->availableActions($order);
 
-        // Determine allowed next statuses
-        $allowedTransitions = [];
-        foreach (OrderStatus::cases() as $case) {
-            if ($order->status->canTransitionTo($case)) {
-                $allowedTransitions[] = $case;
-            }
-        }
+        $canManagePayments = Gate::allows('update', $order) && $order->seller_id === null && $order->pet_listing_id === null;
+        $membership = app(\App\Services\BusinessAccessService::class)->activeMemberships(request()->user())->first();
+        $canReviewRefunds = $order->branch_id === null
+            ? $membership?->role === \App\Services\BusinessAccessService::OWNER
+            : ($membership?->role === \App\Services\BusinessAccessService::MANAGER
+                && (int) $membership->branch_id === (int) $order->branch_id);
+        $canRequestRefund = $order->branch_id !== null
+            && $canManagePayments
+            && $membership?->role === \App\Services\BusinessAccessService::OWNER;
+        $canReviewReturns = $membership?->role === \App\Services\BusinessAccessService::OWNER
+            || ($membership?->role === \App\Services\BusinessAccessService::MANAGER
+                && $order->branch_id !== null
+                && (int) $membership->branch_id === (int) $order->branch_id);
+        $paymentTotals = app(PaymentTransactionService::class)->totalsForOrder($order);
 
-        return view('admin.orders.show', compact('order', 'allowedTransitions'));
+        return view('admin.orders.show', compact('order', 'fulfilmentActions', 'canManagePayments', 'canReviewRefunds', 'canRequestRefund', 'canReviewReturns', 'paymentTotals'));
     }
 
-    public function updateStatus(Request $request, Order $order, OrderInventoryService $inventory): RedirectResponse
+    public function updateStatus(Request $request, Order $order, FulfilmentService $fulfilment): RedirectResponse
     {
         Gate::authorize('update', $order);
         $validated = $request->validate([
             'status' => ['required', Rule::enum(OrderStatus::class)],
-            'cancelled_reason' => ['nullable', 'required_if:status,cancelled', 'string', 'max:500'],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'submission_key' => ['required', 'uuid'],
+            'delivery_method' => ['nullable', Rule::enum(\App\Enums\DeliveryMethod::class)],
+            'delivery_provider' => ['nullable', 'string', 'max:120'],
+            'tracking_reference' => ['nullable', 'string', 'max:120'],
+            'cancelled_reason' => ['nullable', 'string', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ]);
-        $this->requireManagerAuditReason($request, $validated['reason'] ?? $validated['cancelled_reason'] ?? null);
+        $nextStatus = OrderStatus::from($validated['status']);
+        $action = match ($nextStatus) {
+            OrderStatus::Processing => FulfilmentAction::Confirm,
+            OrderStatus::Shipped => FulfilmentAction::Dispatch,
+            OrderStatus::Delivered => $order->delivery_method === \App\Enums\DeliveryMethod::BranchPickup
+                ? FulfilmentAction::ConfirmHandover
+                : FulfilmentAction::Deliver,
+            OrderStatus::Cancelled => FulfilmentAction::Cancel,
+            default => throw \Illuminate\Validation\ValidationException::withMessages(['status' => 'That order status is not an operational action.']),
+        };
 
-        $result = DB::transaction(function () use ($validated, $order, $inventory, $request): array {
-            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
-            Gate::forUser($request->user())->authorize('update', $order);
-            $nextStatus = OrderStatus::from($validated['status']);
-
-            if (! $order->status->canTransitionTo($nextStatus)) {
-                return ['updated' => false, 'order' => $order, 'next_status' => $nextStatus];
-            }
-
-            $oldStatus = $order->status;
-            $order->status = $nextStatus;
-
-            if ($nextStatus === OrderStatus::Cancelled) {
-                $order->cancelled_reason = $validated['cancelled_reason'] ?? null;
-                $inventory->restoreReservedInventory($order);
-            }
-
-            if ($nextStatus === OrderStatus::Delivered && $order->payment_method === 'cod') {
-                $order->payment_status = PaymentStatus::Paid;
-            }
-
-            $order->save();
-
-            AdminAuditLog::record(
-                'order.status_update',
-                "Order #{$order->order_number} status updated from {$oldStatus->value} to {$nextStatus->value}.",
-                [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'from_status' => $oldStatus->value,
-                    'to_status' => $nextStatus->value,
-                    'previous_value' => $oldStatus->value,
-                    'new_value' => $nextStatus->value,
-                    'cancelled_reason' => $order->cancelled_reason,
-                    'reason' => $validated['reason'] ?? null,
-                    'company_id' => $order->company_id,
-                    'branch_id' => $order->branch_id,
-                ]
-            );
-
-            return ['updated' => true, 'order' => $order, 'next_status' => $nextStatus];
-        });
-
-        $order = $result['order'];
-        $nextStatus = $result['next_status'];
-
-        if (! $result['updated']) {
-            return redirect()->route('admin.orders.show', $order)
-                ->with('error', "Cannot transition order from {$order->status->label()} to {$nextStatus->label()}.");
-        }
-
-        return redirect()->route('admin.orders.show', $order)
-            ->with('success', "Order #{$order->order_number} status updated to {$nextStatus->label()}.");
-    }
-
-    public function updatePayment(Request $request, Order $order): RedirectResponse
-    {
-        Gate::authorize('update', $order);
-        $validated = $request->validate([
-            'payment_status' => ['required', Rule::enum(PaymentStatus::class)],
-            'reason' => ['nullable', 'string', 'max:500'],
+        $event = $fulfilment->transition($order, $request->user(), $action, [
+            ...$validated,
+            'note' => $validated['reason'] ?? $validated['cancelled_reason'] ?? null,
         ]);
-        $this->requireManagerAuditReason($request, $validated['reason'] ?? null);
 
-        [$nextPaymentStatus, $oldPaymentStatus] = DB::transaction(function () use ($order, $validated, $request): array {
-            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
-            Gate::forUser($request->user())->authorize('update', $order);
-            $old = $order->payment_status;
-            $next = PaymentStatus::from($validated['payment_status']);
-            $order->payment_status = $next;
-            $order->save();
-
-            AdminAuditLog::record(
-                'order.payment_update',
-                "Order #{$order->order_number} payment status updated from {$old->value} to {$next->value}.",
-                [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                    'old_payment_status' => $old->value,
-                    'new_payment_status' => $next->value,
-                    'previous_value' => $old->value,
-                    'new_value' => $next->value,
-                    'reason' => $validated['reason'] ?? null,
-                    'company_id' => $order->company_id,
-                    'branch_id' => $order->branch_id,
-                ]
-            );
-
-            return [$next, $old];
-        });
-
-        return redirect()->route('admin.orders.show', $order)
-            ->with('success', "Order #{$order->order_number} payment status updated to {$nextPaymentStatus->label()}.");
-    }
-
-    private function requireManagerAuditReason(Request $request, ?string $reason): void
-    {
-        $isManager = app(\App\Services\BusinessAccessService::class)->activeMemberships($request->user())
-            ->contains(fn ($membership): bool => $membership->role === \App\Services\BusinessAccessService::MANAGER);
-
-        if ($isManager && trim((string) $reason) === '') {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'reason' => 'A reason is required when a Branch Manager updates an order record.',
-            ]);
-        }
+        return redirect()->route('admin.orders.show', $event->order_id)
+            ->with('success', 'Order fulfilment action recorded.');
     }
 }

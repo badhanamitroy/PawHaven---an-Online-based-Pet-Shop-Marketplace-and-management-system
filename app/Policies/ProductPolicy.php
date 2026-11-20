@@ -22,7 +22,7 @@ class ProductPolicy
 
     public function view(?User $user, Product $product): bool
     {
-        if ($product->is_published) {
+        if ($product->isPurchasable()) {
             return true;
         }
 

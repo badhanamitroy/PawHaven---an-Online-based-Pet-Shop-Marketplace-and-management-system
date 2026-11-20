@@ -318,10 +318,14 @@ class BusinessAccessService
             $hasOperationalAccess = $isOwner || $memberships->contains(
                 fn (BusinessMembership $membership): bool => $membership->role === self::MANAGER
             );
+            $isEmployeeSeller = $memberships->contains(
+                fn (BusinessMembership $membership): bool => $membership->role === self::EMPLOYEE_SELLER
+            );
             if (($model instanceof Product || $model instanceof ProductCategory || $model instanceof Branch) && ! $isOwner) {
                 throw new AuthorizationException('Only the Shop Owner can create or change company catalogue and branch records.');
             }
-            if (($model instanceof Order || $model instanceof AdminAuditLog) && ! $hasOperationalAccess) {
+            if (($model instanceof AdminAuditLog && ! $hasOperationalAccess)
+                || ($model instanceof Order && ! $hasOperationalAccess && ! $isEmployeeSeller)) {
                 throw new AuthorizationException('This employee position cannot create business order or audit records.');
             }
 
@@ -354,6 +358,19 @@ class BusinessAccessService
                 return [
                     'company_id' => (int) $company->id,
                     'branch_id' => $hasBranch ? $assignedBranchId : null,
+                ];
+            }
+
+            if ($model instanceof Order && $isEmployeeSeller) {
+                $sellerMembership = $memberships->firstWhere('role', self::EMPLOYEE_SELLER);
+                $assignedBranchId = (int) $sellerMembership->branch_id;
+                if ($requestedBranchId !== null && $requestedBranchId !== $assignedBranchId) {
+                    throw new AuthorizationException('Employee Sellers can only attribute orders to their assigned branch.');
+                }
+
+                return [
+                    'company_id' => (int) $company->id,
+                    'branch_id' => $assignedBranchId,
                 ];
             }
 

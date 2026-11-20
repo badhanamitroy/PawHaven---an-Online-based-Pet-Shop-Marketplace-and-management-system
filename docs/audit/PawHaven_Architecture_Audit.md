@@ -78,7 +78,7 @@ There is no repository abstraction. `SettingsService` centralizes settings stora
 
 ## Data model and active database
 
-**Verified active database:** `sqlite`, `D:\PawHaven\PH Web Version\WebApp\database\database.sqlite`, SQLite 3.45.2; 23 tables; 11 migration rows. The DB was queried through a read-only SQLite connection. `PRAGMA foreign_key_check` returned no violations. The user-specified preservation constraints were observed: no migration, reset, seeding or record/file deletion was run.
+**Verified active database:** `sqlite`, `<project-root>\database\database.sqlite`, SQLite 3.45.2; 23 tables; 11 migration rows. The DB was queried through a read-only SQLite connection. `PRAGMA foreign_key_check` returned no violations. The user-specified preservation constraints were observed: no migration, reset, seeding or record/file deletion was run.
 
 Current record counts are a snapshot, not an assertion that the database is production data:
 

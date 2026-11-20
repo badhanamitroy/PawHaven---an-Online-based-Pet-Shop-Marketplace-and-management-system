@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Laravel\Passkeys\Passkeys;
 
@@ -18,18 +19,71 @@ class SystemHealthController extends Controller
         $dbConnected = false;
         $dbError = null;
         $tableCount = 0;
+        $requiredSchema = [
+            'companies' => ['id', 'is_active'],
+            'branches' => ['company_id', 'is_active'],
+            'business_memberships' => ['user_id', 'company_id', 'branch_id', 'role', 'is_active'],
+            'product_categories' => ['company_id'],
+            'products' => ['company_id', 'branch_id', 'currency', 'archived_at'],
+            'orders' => [
+                'company_id', 'branch_id', 'currency', 'employee_seller_id',
+                'sales_channel', 'pos_submission_key', 'online_submission_key', 'fulfilment_status',
+            ],
+            'payment_transactions' => ['order_id', 'amount_minor', 'currency', 'status'],
+            'payment_refund_transactions' => ['payment_transaction_id', 'amount_minor', 'currency', 'status'],
+            'inventory_movements' => ['product_id', 'company_id', 'movement_type', 'quantity_delta'],
+            'product_returns' => ['order_id', 'product_id', 'status', 'requested_quantity'],
+            'order_fulfilment_events' => ['order_id', 'company_id', 'to_status'],
+            'branch_product_prices' => ['product_id', 'company_id', 'branch_id', 'price_minor'],
+            'promotions' => ['company_id', 'discount_type', 'discount_value'],
+            'coupons' => ['company_id', 'code', 'discount_type', 'discount_value'],
+        ];
+        $missingTables = [];
+        $missingColumns = [];
+        $pendingMigrations = [];
+        $unknownAppliedMigrations = [];
+        $migrationState = 'unavailable';
+        $schemaReady = false;
 
         try {
             DB::connection()->getPdo();
             $dbConnected = true;
-            if (config('database.default') === 'sqlite') {
-                $tableCount = (int) DB::selectOne("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")?->count;
-            } else {
-                $tableCount = count(DB::select('SHOW TABLES'));
+            $tableNames = Schema::getTableListing();
+            $tableCount = count($tableNames);
+
+            foreach ($requiredSchema as $table => $columns) {
+                if (! Schema::hasTable($table)) {
+                    $missingTables[] = $table;
+
+                    continue;
+                }
+
+                foreach ($columns as $column) {
+                    if (! Schema::hasColumn($table, $column)) {
+                        $missingColumns[] = "{$table}.{$column}";
+                    }
+                }
             }
+
+            if (! Schema::hasTable('migrations')) {
+                $migrationState = 'migration_history_missing';
+            } else {
+                $migrationFiles = array_map(
+                    static fn (string $file): string => pathinfo($file, PATHINFO_FILENAME),
+                    glob(database_path('migrations/*.php')) ?: [],
+                );
+                $appliedMigrations = DB::table('migrations')->pluck('migration')->all();
+                $pendingMigrations = array_values(array_diff($migrationFiles, $appliedMigrations));
+                $unknownAppliedMigrations = array_values(array_diff($appliedMigrations, $migrationFiles));
+                $migrationState = $unknownAppliedMigrations !== []
+                    ? 'unknown_applied_migrations'
+                    : ($pendingMigrations !== [] ? 'pending_migrations' : 'current');
+            }
+
+            $schemaReady = $missingTables === [] && $missingColumns === [] && $migrationState === 'current';
         } catch (\Throwable $e) {
-            $dbConnected = false;
-            $dbError = 'Database connection unavailable.';
+            $schemaReady = false;
+            $dbError = $dbConnected ? 'Database schema inspection failed.' : 'Database connection unavailable.';
             Log::warning('System health database check failed.', [
                 'exception_type' => get_class($e),
             ]);
@@ -55,6 +109,12 @@ class SystemHealthController extends Controller
                 'connected' => $dbConnected,
                 'tables' => $tableCount,
                 'error' => $dbError,
+                'schema_ready' => $schemaReady,
+                'missing_tables' => $missingTables,
+                'missing_columns' => $missingColumns,
+                'migration_state' => $migrationState,
+                'pending_migrations' => count($pendingMigrations),
+                'unknown_applied_migrations' => count($unknownAppliedMigrations),
             ],
             'storage' => [
                 'linked' => $storageLinked,
@@ -64,7 +124,7 @@ class SystemHealthController extends Controller
             'mail' => [
                 'mailer' => config('mail.default'),
                 'host' => config('mail.mailers.smtp.host') ? 'Configured' : 'Not configured',
-                'from_address' => config('mail.from.address'),
+                'from_address_configured' => filled(config('mail.from.address')),
             ],
             'security' => [
                 'session_driver' => config('session.driver'),

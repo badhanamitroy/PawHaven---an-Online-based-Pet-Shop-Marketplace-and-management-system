@@ -24,8 +24,8 @@ The application is a hybrid of a single-store product shop and a Seller-owned pe
 ### Hardcoded/default references
 
 - `APP_NAME` and many page labels/defaults contain **PawHaven**; some homepage, email, and navigation copy remains literal even though a database brand name is configurable.
-- `SettingsService::defaults()` contains `support@pawhaven.com`, `+1 (555) 729-4283`, `100 Pet Haven Way, Suite 400, Seattle, WA 98101`, and PawHaven social URLs. These look like sample/default contact details and should be replaced before a buyer deployment.
-- The dedicated Admin login form has the personal-looking placeholder `badhanamitroy571@gmail.com`; tests also contain developer/sample addresses. The actual `.env` was not read.
+- `SettingsService::defaults()` contains `[redacted account]`, `+1 (555) 729-4283`, `100 Pet Haven Way, Suite 400, Seattle, WA 98101`, and PawHaven social URLs. These look like sample/default contact details and should be replaced before a buyer deployment.
+- The dedicated Admin login form has the personal-looking placeholder `[redacted account]`; tests also contain developer/sample addresses. The actual `.env` was not read.
 - Public forms use US phone and Seattle examples. The storefront defaults to USD and uses US-oriented sample catalog copy.
 - `resources/views/layouts/app/header.blade.php` links to the Laravel Livewire starter-kit GitHub repository. This is a developer/starter-kit reference, not a buyer's project link.
 - The Admin login screen states that attempts are “geo-tracked”; no geolocation tracking implementation was found in the inspected application code. Do not treat that statement as verified behavior.
@@ -125,7 +125,7 @@ Meeting both requirements requires a per-device remember-token registry and corr
 
 Fresh backup created outside the project:
 
-`D:\PawHaven\Step1A_Backup_20261108_1021`
+`<repository-root>\Step1A_Backup_20261108_1021`
 
 - SQLite snapshot: `database.sqlite`, 323,584 bytes.
 - Snapshot SHA-256: `3D89307AFE7E1F55ADEA47A3669C03E2C592EBBF649A943170F03E777F48C1AB`.

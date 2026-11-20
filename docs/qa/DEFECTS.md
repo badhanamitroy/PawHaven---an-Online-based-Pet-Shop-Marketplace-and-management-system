@@ -61,7 +61,7 @@ This document records the defects discovered during the real Chrome browser QA e
 ### DEF-03: Local Development Admin 2FA Test Accessibility
 - **Severity:** Low (Developer & QA Experience)
 - **Symptoms:**
-  The admin portal enforces mandatory 2FA email codes. Because `badhanamitroy571@gmail.com` does not use a mailbox available to the QA environment, automated headless testing of internal admin routes (`/admin`, `/admin/homepage`, `/admin/orders`) was blocked by the 2FA checkpoint.
+  The admin portal enforces mandatory 2FA email codes. Because `[redacted account]` does not use a mailbox available to the QA environment, automated headless testing of internal admin routes (`/admin`, `/admin/homepage`, `/admin/orders`) was blocked by the 2FA checkpoint.
 - **Root Cause:**
   `EmailOtpService` only saved the hashed bcrypt value of the OTP in cache for production security.
 - **Remediation:**

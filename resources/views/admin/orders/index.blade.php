@@ -140,7 +140,7 @@
                                     {{ $order->created_at?->format('M d, Y H:i') }}
                                 </td>
                                 <td class="px-3 py-3.5 font-bold text-[#173F32]">
-                                    ${{ number_format($order->total_minor / 100, 2) }}
+                                    {{ $order->currency }} {{ number_format($order->total_minor / 100, 2) }}
                                 </td>
                                 <td class="px-3 py-3.5">
                                     <div class="flex items-center gap-1.5">

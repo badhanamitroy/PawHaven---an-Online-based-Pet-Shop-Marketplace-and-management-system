@@ -80,7 +80,7 @@
                         <span class="text-[#69736B] block">Price:</span>
                         <strong class="text-[#245C45]">
                             @if($listing->price_minor)
-                                ${{ number_format($listing->price_minor / 100, 2) }}
+                                {{ $listing->currency }} {{ number_format($listing->price_minor / 100, 2) }}
                             @else
                                 Free / Adoption
                             @endif

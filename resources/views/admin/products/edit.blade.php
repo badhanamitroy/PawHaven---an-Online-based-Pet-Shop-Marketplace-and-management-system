@@ -130,7 +130,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label for="price" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Regular Price ($) <span class="text-red-500">*</span>
+                        Regular Price ({{ $product->currency }}) <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-500">$</span>
@@ -152,7 +152,7 @@
 
                 <div>
                     <label for="sale_price" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
-                        Sale / Discounted Price ($) <span class="text-gray-400 font-normal">(Optional)</span>
+                        Sale / Discounted Price ({{ $product->currency }}) <span class="text-gray-400 font-normal">(Optional)</span>
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-500">$</span>
@@ -179,6 +179,7 @@
                     <input
                         type="number"
                         min="0"
+                        max="2147483647"
                         name="stock_quantity"
                         id="stock_quantity"
                         value="{{ old('stock_quantity', $product->stock_quantity) }}"
@@ -186,6 +187,21 @@
                         class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
                     />
                     @error('stock_quantity')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                    <label for="stock_adjustment_reason" class="mt-3 block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1.5">
+                        Stock Change Reason
+                    </label>
+                    <input
+                        type="text"
+                        name="stock_adjustment_reason"
+                        id="stock_adjustment_reason"
+                        value="{{ old('stock_adjustment_reason') }}"
+                        maxlength="1000"
+                        placeholder="Required when changing stock quantity"
+                        class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
+                    />
+                    @error('stock_adjustment_reason')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
