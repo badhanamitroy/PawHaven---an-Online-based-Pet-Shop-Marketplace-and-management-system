@@ -1,342 +1,344 @@
-# PawHaven
+# PawHaven — Pet Shop, Marketplace & Multi-Branch Management System
 
 **Find Pets. Give Hope. Shop with Love.**
 
-PawHaven is a Laravel web application for pet listings, customer purchase and inquiry requests, a PawHaven-managed product catalogue, branch operations, and employee recruitment.
+[![Laravel 13](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP 8.3+](https://img.shields.io/badge/PHP-%5E8.3-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Livewire 4](https://img.shields.io/badge/Livewire-4.x-FB70A9?style=for-the-badge&logo=livewire&logoColor=white)](https://livewire.laravel.com)
+[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 
-![Laravel 13](https://img.shields.io/badge/Laravel-13.x-FF2D20?logo=laravel&logoColor=white)
-![PHP 8.3+](https://img.shields.io/badge/PHP-%5E8.3-777BB4?logo=php&logoColor=white)
-![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)
+PawHaven is a full-stack Laravel enterprise web platform integrating a public pet marketplace, an ethical adoption and rescue hub, a single-brand pet supplies store, multi-branch business operations with inventory reservations, and an internal employee recruitment pipeline.
 
-PawHeaven source and support details are provided with the buyer distribution.
+**Repository URL:** [https://github.com/badhanamitroy/PawHaven---an-Online-based-Pet-Shop-Marketplace-and-management-system](https://github.com/badhanamitroy/PawHaven---an-Online-based-Pet-Shop-Marketplace-and-management-system)
 
-> **Repository contents:** The GitHub `main` branch currently publishes this README only. The Laravel application source is available in a separate `PH Web Version/WebApp` source checkout and has not been published to this repository. The setup instructions below apply to a checkout that contains the Laravel project files; cloning the current GitHub branch alone is not enough to run the application.
+---
 
-## Contents
+## Table of Contents
 
 - [Overview](#overview)
-- [Core features](#core-features)
-- [Architecture and authorization](#architecture-and-authorization)
-- [Technology stack](#technology-stack)
-- [Application structure](#application-structure)
-- [Local development](#local-development)
-- [Environment configuration](#environment-configuration)
-- [Database and migrations](#database-and-migrations)
-- [Security](#security)
-- [Testing](#testing)
-- [Current limitations and roadmap](#current-limitations-and-roadmap)
+- [Key Features](#key-features)
+  - [1. Storefront & Marketplace](#1-storefront--marketplace)
+  - [2. Redesigned Admin Console](#2-redesigned-admin-console)
+  - [3. Dynamic Brand Media & Cache Invalidation](#3-dynamic-brand-media--cache-invalidation)
+  - [4. Custom Paw Cursor](#4-custom-paw-cursor)
+  - [5. Branch Operations & Inventory](#5-branch-operations--inventory)
+  - [6. Careers & Recruitment Workflow](#6-careers--recruitment-workflow)
+- [Architecture & Role Boundaries](#architecture--role-boundaries)
+- [Technology Stack](#technology-stack)
+- [Canonical Media Directory](#canonical-media-directory)
+- [Application Directory Structure](#application-directory-structure)
+- [Getting Started & Local Development](#getting-started--local-development)
+  - [Prerequisites](#prerequisites)
+  - [Step-by-Step Installation](#step-by-step-installation)
+  - [Environment Configuration](#environment-configuration)
+  - [Database Migrations & First Admin Setup](#database-migrations--first-admin-setup)
+  - [Background Queues & Scheduled Workers](#background-queues--scheduled-workers)
+- [Testing & Quality Assurance](#testing--quality-assurance)
+- [Security Architecture](#security-architecture)
+- [Current Roadmap & Limitations](#current-roadmap--limitations)
 - [Contributing](#contributing)
-- [License](#license)
-- [Maintainer](#maintainer)
+- [License & Author](#license--author)
+
+---
 
 ## Overview
 
-PawHaven brings together a public pet marketplace and the internal tools used to manage PawHaven products, branches, inventory, orders, and employee access. A deployment is designed around one PawHaven company with one or more branches.
+PawHaven bridges customer-facing commerce with deep back-office business controls. The platform operates around a single primary company structure that can span multiple physical and regional branches.
 
-The application has distinct account and business-position concepts:
+Access and authority are strictly separated between **administrative platform concerns** and **company commerce operations**:
 
-- **Customers** browse listings and products, submit purchase or inquiry requests, and manage their own account activity.
-- **Marketplace Sellers** are independent marketplace users who manage their own pet listings and seller-associated requests.
-- **Employee Sellers / Sales Associates** work for PawHaven. They use an internal `staff` account with a branch-scoped `seller` business membership. They are not Marketplace Sellers.
-- **Branch Managers** use an internal `staff` account with a branch-scoped `manager` membership.
-- **The Shop Owner** has company-wide business authority through an active `owner` membership.
-- **Platform Admins** manage platform-level functions. Their `admin` account does not automatically make them the Shop Owner.
+1. **Customers:** Browse pet listings, view breed guides, explore adoption candidates, request pet purchases or inquiries, order supplies, and track their orders.
+2. **Marketplace Sellers:** Independent pet owners or breeders who submit listings for administrator moderation and manage listing inquiries.
+3. **Employee Sellers (Sales Associates):** Staff members assigned to a specific branch for branch-level store operations.
+4. **Branch Managers:** Staff members authorized to supervise orders, inventory, and branch operations for their designated branch.
+5. **Shop Owner:** Holds company-wide business operational authority over products, categories, branches, and staff memberships.
+6. **Platform Admins:** Manage platform-level configurations, moderation queues, brand identity, announcements, careers, and security auditing.
 
-## Core features
+---
 
-### Customers and marketplace
+## Key Features
 
-- Customer registration, email verification, login, and account security flows.
-- Public browsing of published pet listings, listing details, breed information, and adoption or rehoming opportunities.
-- Customer purchase requests and inquiries for listings, with customer dashboards for their own activity.
-- Marketplace Seller listing creation and management, with administrator review before publication.
-- A PawHaven product catalogue shown on the public site.
-- Product buy requests that reserve available stock and create an order for review. The current interface explicitly defers a digital cart and full checkout; see [Current limitations and roadmap](#current-limitations-and-roadmap).
+### 1. Storefront & Marketplace
+- **Pet Listings & Inquiries:** Category-driven browsing (Dogs, Cats, Birds, Rabbits, etc.) with detailed health history, vaccination records, and seller inquiries.
+- **Pet Shop Catalogue:** PawHaven direct-to-consumer pet supplies and accessories.
+- **Breed Encyclopedia:** Comprehensive breed profiles with size, temperament, shedding, and grooming guidelines.
+- **Adoption & Rescue Hub:** Ethical rehoming listings with special adoption application workflows.
 
-### Business operations
+### 2. Redesigned Admin Console
+Built using a cohesive visual design system with dark forest green navigation (`#0F2A20`), primary action emeralds (`#17603F`), clean white cards, and Inter typography:
+- **Admin Dashboard:** Real-time KPI summaries, operational alerts, recent order activity, and quick-action navigation.
+- **Brand Identity & Media:** Real-time brand configuration, live storefront header/sidebar preview, color picker palette, and search engine metadata preview.
+- **Pet Categories:** Hierarchical category management with active listings counters and publication states.
+- **Homepage Customizer:** Live customizer for hero banners, announcements, featured collections, and trust highlights.
+- **Marketplace Listings & Moderation:** Full review queue with one-click approve/reject actions, listing inspection modals, and seller feedback notes.
+- **Companies & Branch Access:** Multi-branch oversight, staff role assignment, and branch assignment controls.
+- **Breed Profiles & Adoption Hub:** Breed directory management and non-profit adoption partner moderation.
 
-- A single installation Company with Company-owned Branch records.
-- Active business memberships for Shop Owner, Branch Manager, and Employee Seller positions.
-- Company-wide product and category management by the Shop Owner.
-- Branch-scoped operational visibility for Managers, including assigned-branch inventory and orders.
-- Inventory reservation when a product buy request is submitted, and inventory restoration when an eligible order is cancelled.
-- Server-side company and branch checks in services, middleware, and policies.
+### 3. Dynamic Brand Media & Cache Invalidation
+Centralized through `App\Services\MediaManager`:
+- **Canonical Filesystem Location:** `public/Media/` contains canonical assets (`Hero-Banner.png`, `PawHeaven-Green-logo.png`, `PawHeaven-White-logo.png`, `PawHeaven-NavyBlue-logo.png`, `PawHeaven-icon.png`).
+- **Zero-Friction Overwrites:** If a buyer or administrator manually replaces an asset file directly in the filesystem, or uploads a replacement through the Admin Panel, the application automatically computes a timestamp-based cache buster (`?v=<filemtime>`).
+- **No Manual Cache Clearing:** Browsers and CDNs immediately receive the fresh asset without requiring `php artisan cache:clear` or code changes.
+- **Transactional Atomic Uploads:** Validates MIME types, extensions, dimensions, and file size limits, staging files in temporary storage with automatic rollback and error logging on failure.
 
-### Administration
+### 4. Custom Paw Cursor
+- **Brand-Themed Silhouette:** High-contrast dark green (`#17603F`) paw silhouette with white stroke and soft drop shadow (`public/Media/paw-cursor.svg` with 32×32 PNG fallback).
+- **Admin Toggle:** Persisted under `brand.custom_paw_cursor` in the settings table.
+- **Interactive Admin Sandbox:** A live test card in the Admin Brand Identity page allowing administrators to test cursor hover states on buttons, links, and text fields before saving.
+- **Non-Intrusive Design:** Scoped to desktop fine-pointer devices (`@media (hover: hover) and (pointer: fine)`). Native text selection (`cursor: text !important`) is strictly preserved on paragraphs, headings, inputs, and textareas. Touchscreens and mobile devices are completely unaffected.
 
-- A Platform Admin area for platform functions such as marketplace moderation, user administration, site content, branding, breeds, community settings, and system information.
-- Shop Owner controls for company operations, branches, employee assignments, products, categories, inventory, and business settings.
-- Audit records for significant business and administrative actions.
-- Administrative invitation tools retained for exceptional or recovery cases; Careers is the primary employee recruitment workflow.
+### 5. Branch Operations & Inventory
+- **Single-Company Multi-Branch Scope:** Each branch maintains its own stock counts and fulfilled orders.
+- **Inventory Reservation:** Stock is automatically reserved upon order creation and safely restored if an order is cancelled.
+- **Role Enforcement:** Branch Managers cannot modify company-wide product definitions or stock quantities outside their assigned branch.
 
-### Careers and recruitment
+### 6. Careers & Recruitment Workflow
+- **Public Vacancy Board:** Publicly listed job openings with online CV submissions.
+- **Application Review:** Private CV downloads stored on protected disks with reviewer notes.
+- **Secure Job Offers:** Generates an offer link requiring email OTP verification before creating the employee account.
+- **Shop Owner Final Approval:** The new employee membership remains inactive until approved by the Shop Owner.
 
-- A public Careers page with published vacancy announcements, vacancy details, and account-free applications.
-- Admin-managed vacancy publication, application review, internal notes, and private CV downloads.
-- Formal offers with an assigned position, branch, terms, deadline, and secure registration link.
-- Offer-bound email OTP verification before employee User and membership creation.
-- Shop Owner approval before the new employee membership becomes operationally active.
+---
 
-## Architecture and authorization
+## Architecture & Role Boundaries
 
-PawHaven separates a system account role from an employee's business position. Employee positions are stored in `business_memberships`; a membership is scoped to the installation Company and, for employees, to a Branch. Business access is enforced on the server through middleware, services, policies, and database relationships.
+PawHaven separates **system accounts** (`users.role`) from **business positions** (`business_memberships`):
 
-| Account | Representation | Main access boundary |
-| --- | --- | --- |
-| Platform Admin | `users.role = admin` | Platform administration and recruitment. Does not receive implicit Shop Owner authority for business operations. |
-| Shop Owner | `users.role = staff` plus one active `owner` membership with no Branch | Company-wide business operations, including catalogue, categories, inventory, branches, and employee assignments. |
-| Branch Manager | `users.role = staff` plus an active `manager` membership for a Branch | Permitted operational access for the assigned Branch, including branch orders, inventory viewing, and employee directory visibility. Cannot manage the company catalogue, categories, stock quantities, or employee access. |
-| Employee Seller / Sales Associate | `users.role = staff` plus an active `seller` membership for a Branch | Branch-scoped product access needed for operations. Does not manage products, categories, stock, orders, or employees. A POS workflow is not implemented. |
-| Marketplace Seller | `users.role = seller` | Own marketplace listings and seller-associated requests; separate from employee memberships. |
-| Customer | Normally `users.role = customer` | Personal account, published marketplace content, and the customer's own requests and orders. |
+| Role / Position | Database Representation | Operational Boundary |
+|---|---|---|
+| **Platform Admin** | `users.role = admin` | Platform configuration, moderation, brand identity, user administration, careers, and security audit logs. |
+| **Shop Owner** | `users.role = staff` + `membership.role = owner` (no branch) | Company-wide business operations: product catalog, stock allocations, branch management, and employee approvals. |
+| **Branch Manager** | `users.role = staff` + `membership.role = manager` (branch-scoped) | Assigned branch orders, local inventory viewing, and branch employee directory. Cannot modify company-wide catalog. |
+| **Employee Seller** | `users.role = staff` + `membership.role = seller` (branch-scoped) | Branch-scoped operational activities and product inquiries. |
+| **Marketplace Seller** | `users.role = seller` | Own marketplace pet listings and direct buyer inquiries. |
+| **Customer** | `users.role = customer` | Personal profile, pet purchase requests, shop order tracking, and adoption applications. |
 
-The Shop Owner is the company-wide operational authority. Platform Admin retains platform and initial-setup controls, but is not implicitly authorized for day-to-day business operations. Manager access to business records is constrained to the assigned Branch. Employee Sellers have a more limited operational scope. Platform Admin pages and Shop Owner pages are separate authorization areas; hiding a navigation item is not the authorization control.
+---
 
-For a new installation, `php artisan admin:create` provisions a **Platform Admin**, not a Shop Owner. Initial Owner setup is available through the business access area when no active Owner exists. It requires a verified, otherwise unassigned Customer account; the initial setup flow changes that account to `staff` and assigns the company-wide Owner membership.
+## Technology Stack
 
-## Technology stack
+| Layer | Technologies |
+|---|---|
+| **Backend Runtime** | PHP `^8.3` (running on PHP 8.3+) |
+| **Web Framework** | Laravel `^13.x` |
+| **Authentication & 2FA** | Laravel Fortify `^1.37`, Email OTP challenges, and TOTP support |
+| **Frontend Framework** | Blade templates, Livewire `^4.1`, Flux `^2.13`, Alpine.js |
+| **Styling & Design System** | Tailwind CSS `^4.0`, Inter font, custom CSS design system |
+| **Build Tools** | Vite `^8.0`, Laravel Vite Plugin `^3.1`, Vite Plus |
+| **Database Support** | SQLite (development default), MySQL, MariaDB, PostgreSQL |
+| **Testing & Quality** | PHPUnit `^12.5`, Laravel Test Runner, Laravel Pint |
 
-Versions below are based on the project manifests and lockfiles:
+---
 
-| Area | Technology |
-| --- | --- |
-| Runtime | PHP `^8.3` |
-| Application framework | Laravel `^13.17` |
-| Authentication | Laravel Fortify `^1.37.2`, with application email OTP flows and Fortify TOTP support |
-| Server-rendered UI | Blade, Livewire `^4.1`, and Flux `^2.13.1` |
-| CSS | Tailwind CSS `^4.0.7` |
-| Frontend build | Vite `^8.0.0`, Laravel Vite Plugin `^3.1`, and Vite Plus `0.3.0` |
-| JavaScript | ES modules; Laravel Passkeys client package is present |
-| Database connections | SQLite, MySQL, MariaDB, PostgreSQL, and SQL Server are configured |
-| Tests and quality tools | PHPUnit `^12.5.23`, Laravel test runner, Pint, and Larastan/PHPStan |
+## Canonical Media Directory
 
-The locked Vite Plus package requires Node.js `^20.19.0`, `^22.18.0`, or `>=24.11.0`; the locked Vite version also requires Node.js `^20.19.0` or `>=22.12.0`. Use a Node.js version satisfying both ranges. The repository does not specify an npm version range.
+All canonical media assets are organized in the public web root:
 
-Database drivers are configured in the application, but that does not mean every migration or concurrency behavior has been validated on every engine. Validate migrations and locking behavior against the actual deployment database before release.
+```text
+public/Media/
+├── Images/
+│   ├── Hero-Banner.png          # Storefront homepage hero banner (1920x640)
+│   ├── birds-category.jpg       # Category showcase thumbnail
+│   ├── british-shorthair.jpg    # Category showcase thumbnail
+│   ├── holland-lop.webp         # Category showcase thumbnail
+│   └── rabbits-category.jpg     # Category showcase thumbnail
+├── Logos/
+│   ├── PawHeaven-Green-logo.png # Primary green logo (light surfaces / navbar)
+│   ├── PawHeaven-White-logo.png # White / dark logo (footer / admin sidebar)
+│   ├── PawHeaven-NavyBlue-logo.png # Navy logo (invoices / printable receipts)
+│   └── PawHeaven-icon.png       # Square icon & browser favicon (512x512)
+├── paw-cursor.svg               # Scalable vector custom cursor
+└── paw-cursor.png               # 32x32 transparent PNG cursor fallback
+```
 
-## Application structure
+---
 
-The main application layers are:
+## Application Directory Structure
 
-| Path | Responsibility |
-| --- | --- |
-| `routes/` | Public, authentication, seller, admin, and settings routes. |
-| `app/Http/Controllers/` | HTTP request handling and response selection. |
-| `app/Http/Requests/` | Request validation and authorization for complex inputs. |
-| `app/Models/` | Eloquent models and relationships for users, listings, orders, branches, memberships, invitations, and Careers. |
-| `app/Services/` | Business access, memberships, invitations, OTP, recruitment, settings, order inventory, and device-session logic. |
-| `app/Policies/` | Record and action authorization. |
-| `app/Http/Middleware/` | Role-aware route gates and session/access checks. |
-| `database/migrations/` | User, marketplace, commerce, business-access, invitation, and Careers schema. |
-| `resources/views/` | Blade pages and layouts for public, customer, seller, admin, email, and Careers workflows. |
-| `resources/js/`, `resources/css/` | Frontend entry points and Tailwind styling. |
-| `tests/` | PHPUnit unit and feature tests. |
+```text
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/               # Admin dashboard, brand, moderation, breeds, branches
+│   │   ├── Customer/            # Customer profile, orders, purchase requests
+│   │   └── Seller/              # Marketplace seller listing management
+│   ├── Middleware/              # Role-aware route gates (Admin, Staff, Seller, Customer)
+│   └── Requests/                # Form request validation classes
+├── Models/                      # Eloquent models (User, PetListing, Order, Company, Branch, etc.)
+├── Policies/                    # Authorization policies for orders, listings, and branches
+└── Services/
+    ├── MediaManager.php         # Canonical asset URLs, validation, and atomic replacements
+    ├── SettingsService.php      # Key-value persistent settings with memory caching
+    ├── BusinessAccessService.php# Multi-branch membership & role resolution
+    └── DeviceSessionService.php # Device session tracking and security pruning
+resources/
+├── views/
+│   ├── admin/                   # Redesigned Admin Console views
+│   ├── layouts/                 # Base layouts (Admin, Auth, App)
+│   ├── partials/                # Reusable partials (custom-cursor, favicon, head)
+│   └── welcome.blade.php        # Public storefront & hero section
+routes/
+├── web.php                      # Public storefront, customer, and auth routes
+├── admin.php                    # Platform Admin and Shop Owner console routes
+└── seller.php                   # Marketplace Seller portal routes
+```
 
-## Local development
+---
 
-### Source availability
-
-The GitHub repository currently contains only this README, so the clone command below does not yet provide the Laravel application files. Use a source checkout containing `artisan`, `composer.json`, and `package.json` to run the application. Once those files are published to GitHub, a fresh clone can be used for the following steps.
+## Getting Started & Local Development
 
 ### Prerequisites
 
-- PHP `^8.3` with the extensions required by Composer dependencies, including a PDO driver for the selected database.
-- Composer.
-- Node.js satisfying the Vite Plus and Vite ranges above, with npm.
-- SQLite for a local default setup, or a separately provisioned database supported by the application configuration.
+- **PHP 8.3 or higher** with required extensions (`pdo`, `sqlite3`, `curl`, `mbstring`, `openssl`).
+- **Composer** (latest version).
+- **Node.js** (`^20.19.0`, `^22.18.0`, or `>=24.11.0`) with **npm**.
+- **SQLite** (default local database) or a configured MySQL/PostgreSQL server.
 
-### Setup
+### Step-by-Step Installation
 
+#### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/badhanamitroy/PawHaven---an-Online-based-Pet-Shop-Marketplace-and-management-system.git PawHaven
 cd PawHaven
 ```
 
-The commands below must be run from the Laravel source directory (the directory containing `artisan`).
-
-Install backend and frontend dependencies:
-
+#### 2. Install Dependencies
 ```bash
+# Install PHP dependencies
 composer install
+
+# Install Node.js dependencies
 npm ci
 ```
 
-Create the environment file and application key.
+#### 3. Environment Setup
+Create your local environment file:
 
 **Windows PowerShell:**
-
 ```powershell
 Copy-Item .env.example .env
 php artisan key:generate
 ```
 
-**Linux or macOS:**
-
+**Linux / macOS:**
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-Configure `.env` for the intended local database. SQLite is the default. Create the SQLite file only if it does not already exist.
+#### 4. Prepare Local Database
+By default, the application is configured to use SQLite.
 
 **Windows PowerShell:**
-
 ```powershell
 if (-not (Test-Path database/database.sqlite)) {
     New-Item -ItemType File -Path database/database.sqlite | Out-Null
 }
 ```
 
-**Linux or macOS:**
-
+**Linux / macOS:**
 ```bash
 touch database/database.sqlite
 ```
 
-For MySQL or another configured server, create an empty database and database user separately, then set the matching `DB_*` values in `.env`. Do not use a destructive reset command against a database containing data.
-
-Run the migrations for the configured development database:
-
+Run database migrations:
 ```bash
 php artisan migrate
 ```
 
-If the application serves uploaded marketplace listing images from the public disk, create the Laravel storage link:
-
+#### 5. Storage Symlink
+Create the storage symbolic link for user uploads:
 ```bash
 php artisan storage:link
 ```
 
-Create the first Platform Admin interactively. The command prompts for account details and a password; do not put real passwords in shell history or commit them.
-
+#### 6. Provision First Platform Administrator
+Create the initial Platform Admin account interactively:
 ```bash
 php artisan admin:create
 ```
+Follow the prompt to provide the administrator name, email, and password.
 
-Then create and verify the intended Shop Owner's Customer account and assign the initial Owner membership under **Admin → Business**. The setup flow is available only while there is no active Shop Owner. Create Branches after Owner setup. Configure a working mail transport before exercising login OTP, invitations, or Careers offer email flows.
-
-Build frontend assets or start the development watcher:
-
+#### 7. Build Assets & Start Development Servers
+In your first terminal, start the asset compiler:
 ```bash
-npm run build
-# or
 npm run dev
 ```
 
-Start Laravel in another terminal:
-
+In a second terminal, start the Laravel development server:
 ```bash
 php artisan serve
 ```
 
-### Queues and scheduled tasks
+Visit the application at: `http://127.0.0.1:8000`
 
-The example environment and queue configuration use the `database` queue connection. The queue tables are included in the standard migrations. When the application has queued work to process, run a worker in a separate terminal:
+---
 
+## Background Queues & Scheduled Workers
+
+The application uses the `database` queue driver and includes scheduled security cleanup tasks.
+
+### Queue Worker
+Run the queue worker in a separate terminal:
 ```bash
 php artisan queue:work
 ```
 
-The application currently registers one scheduled task: `device-sessions:prune`, which runs daily to remove device-session records past their retention period. For local development, keep Laravel's scheduler running in a separate terminal:
-
+### Scheduled Task Runner
+For local testing of daily session pruning:
 ```bash
 php artisan schedule:work
 ```
 
-In production, configure the host scheduler to invoke `php artisan schedule:run` once per minute from the Laravel project directory. The scheduler only runs tasks that are due; it does not replace a queue worker for database-backed queued jobs.
-
-## Environment configuration
-
-The application reads configuration through Laravel's `.env` file. Set values locally and keep `.env` out of version control.
-
-| Category | Relevant variables |
-| --- | --- |
-| Application | `APP_NAME`, `APP_ENV`, `APP_KEY`, `APP_DEBUG`, `APP_URL`, locale variables |
-| Database | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` |
-| Mail | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SCHEME`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` |
-| Filesystem | `FILESYSTEM_DISK`; `AWS_*` settings when using the configured S3 disk |
-| Session, cache, queue | `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION`, `BROADCAST_CONNECTION` |
-| Device sessions | `DEVICE_SESSION_COOKIE`, `DEVICE_SESSION_IDLE_DAYS`, `DEVICE_SESSION_RETENTION_DAYS`, `DEVICE_SESSION_ROTATION_GRACE_SECONDS` |
-
-The `.env.example` file is the source of the available environment-variable names and defaults. Replace placeholders with environment-appropriate settings; never publish credentials, application keys, or mail passwords.
-
-## Database and migrations
-
-The schema includes users and authentication data, pet categories and listings, listing images and moderation history, products and product categories, orders and order items, settings, device sessions, Companies and Branches, business memberships, invitations, audit logs, and Careers postings, applications, offers, and offer OTP challenges.
-
-A fresh business-access migration establishes the installation Company. The business model then uses one Company per installation, with multiple Branches. Employee memberships use the `owner`, `manager`, or `seller` position and require the corresponding company-wide or branch scope. Database constraints protect Company/Branch relationships and active membership integrity where supported by the migration implementation.
-
-Run migrations with `php artisan migrate` only after configuring the intended database. Existing installations should be reviewed with the read-only preflight command before applying business-integrity migrations:
-
+In production, register a single cron entry on the host:
 ```bash
-php artisan pawhaven:business-preflight
+* * * * * cd /path-to-pawhaven && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-The preflight reports data conditions that need review; it does not repair records. Ambiguous legacy employee assignments may need explicit manual resolution. SQLite is used for the project's isolated test configuration. Other configured database drivers require their own migration and concurrency validation before deployment.
+---
 
-## Security
+## Testing & Quality Assurance
 
-- Laravel authentication, password hashing, verified-email middleware, request validation, CSRF protection on web forms, and route throttling are used across the application.
-- Platform Admin, Shop Owner, employee, Marketplace Seller, and Customer access are separated in server-side middleware, services, and policies.
-- Company and Branch assignments are validated server-side. Business queries and actions use membership-based company/branch authorization.
-- Invitation links and employment offers use expiring, single-use registration credentials; resending or revoking invalidates prior links.
-- Careers uses a separate offer-bound email OTP challenge. The employee User is created only after successful verification; the membership remains inactive until Shop Owner approval.
-- Careers CVs are stored on the private local disk and served through an authorized administrative download route. Marketplace listing images use the public disk and require the storage link when served locally.
-- Significant administrative, business, invitation, and recruitment actions are recorded through the audit-log infrastructure.
-- Email OTP and Fortify TOTP continuation are implemented for applicable authentication flows. Passkey login routes are currently disabled while they are incompatible with the required OTP/TOTP policy.
-
-These are application controls, not a security certification. Review deployment configuration, database permissions, mail transport, backups, and operational procedures for the environment where PawHaven will run.
-
-## Testing
-
-The PHPUnit configuration uses an in-memory SQLite database and array-backed mail, cache, and session services. Tests should run with the project test environment; they do not require the configured application database when the repository test configuration is respected.
-
-Run the feature and unit suites:
-
+Run the test suite with PHPUnit:
 ```bash
 php artisan test
 ```
 
-The Composer test script also runs formatting and static-analysis checks before Laravel tests:
-
+Run static analysis and code styling checks:
 ```bash
 composer test
 ```
 
-To build frontend assets:
-
+Compile frontend production assets:
 ```bash
 npm run build
 ```
 
-SQLite tests do not establish row-lock or concurrent-request behavior for MySQL, MariaDB, PostgreSQL, or SQL Server. Test those behaviors against an isolated instance of the intended deployment engine.
+---
 
-## Current limitations and roadmap
+## Security Architecture
 
-- **Cart and full checkout:** the product flow creates a buy request and reserves stock; a customer-facing cart and complete checkout experience are not implemented.
-- **POS and offline sales:** no point-of-sale workflow is implemented.
-- **Sales attribution:** orders do not yet record the employee Seller who handled a sale or a complete Company/Branch/channel attribution model for online and offline sales.
-- **Sales reporting and correction:** employee-specific sales reports and audited sales-correction workflows are deferred.
-- **Careers scope:** the application implements vacancies, applications, review, offers, offer OTP, employee creation, and Owner approval. It is not a full HRM system.
-- **HR features:** payroll, attendance, leave management, and performance management are not implemented.
-- **Database validation:** migration and locking behavior still needs validation on each intended production database engine; SQLite-only results are not sufficient for production sign-off.
-- **Passkeys:** passkey login endpoints are disabled until they can preserve the mandatory authentication challenge policy.
+- **Role & Scope Segregation:** System roles (`admin`, `staff`, `seller`, `customer`) and business memberships (`owner`, `manager`, `seller`) are verified server-side in controllers and policies.
+- **Audit Trails:** Administrative, moderation, and business actions are recorded in the `audit_logs` table with user and timestamp context.
+- **Expiring Credentials:** Employee invitation tokens and career offers are single-use and time-bound.
+- **OTP Protection:** Email OTP verification guards sensitive workflows including offer acceptance and staff onboarding.
+- **Private Storage:** Application CVs and internal documents are stored on non-public disks and served exclusively via authorized streaming controllers.
+
+---
 
 ## Contributing
 
-Contributions are welcome through a simple reviewable workflow:
-
 1. Fork the repository.
-2. Create a focused branch for your change.
-3. Make the change and add or update relevant tests.
-4. Run the applicable test and quality checks.
-5. Open a pull request describing the change and its verification.
+2. Create a descriptive feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a Pull Request.
 
-No separate formal contribution policy is currently published. Avoid including `.env` files, credentials, personal application data, or private uploads in a contribution.
+---
 
-## License
+## License & Author
 
-The local application's `composer.json` declares `MIT`, but this source checkout has no `LICENSE` text file, and the current GitHub repository does not publish the application manifest. Review the intended license and publish its license text before relying on an open-source grant. Until a license is clearly published, do not assume reuse permissions.
-
-## Maintainer
-- Source repository URL is supplied with the buyer distribution.
+- **Project:** PawHaven — Pet Shop, Marketplace & Multi-Branch Management System
+- **Lead Developer & Maintainer:** [Badhan Roy](https://github.com/badhanamitroy)
+- **License:** Open-source software licensed under the [MIT License](https://opensource.org/licenses/MIT).

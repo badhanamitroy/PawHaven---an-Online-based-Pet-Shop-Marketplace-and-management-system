@@ -6,7 +6,7 @@
     <body class="min-h-full font-sans antialiased bg-[#FAF8F2] text-[#202820] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
         @php
             $brandName = \App\Facades\Settings::get('brand.name', config('app.name', 'PawHaven'));
-            $whiteLogo = \App\Facades\Settings::get('brand.logo_dark_path', asset('images/pawhaven-logo-white.png'));
+            $whiteLogo = \App\Services\MediaManager::logoUrl('white');
         @endphp
 
         <div class="sm:mx-auto sm:w-full sm:max-w-md">

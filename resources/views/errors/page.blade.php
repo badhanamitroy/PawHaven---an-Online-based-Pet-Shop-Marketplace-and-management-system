@@ -144,7 +144,7 @@
     <main>
         <div class="brand">
             <a href="{{ url('/') }}" aria-label="PawHaven home">
-                <img src="{{ asset(ltrim((string) \App\Facades\Settings::get('brand.logo_light_path', 'images/pawhaven-logo-green.png'), '/')) }}" alt="{{ $brandName }}">
+                <img src="{{ \App\Services\MediaManager::logoUrl('green') }}" alt="{{ $brandName }}">
             </a>
         </div>
         <section class="content" aria-labelledby="error-title">

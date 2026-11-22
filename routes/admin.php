@@ -145,6 +145,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         // Website & Branding
         Route::get('brand', [BrandIdentityController::class, 'index'])->name('brand.index');
         Route::put('brand', [BrandIdentityController::class, 'update'])->name('brand.update');
+        Route::post('brand/media', [BrandIdentityController::class, 'replaceMedia'])->name('brand.media.replace');
 
         Route::get('homepage', [HomepageCustomizerController::class, 'index'])->name('homepage.index');
         Route::put('homepage', [HomepageCustomizerController::class, 'update'])->name('homepage.update');

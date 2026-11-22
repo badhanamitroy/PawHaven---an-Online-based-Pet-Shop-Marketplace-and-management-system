@@ -7,6 +7,7 @@
 </title>
 
 @include('partials.favicon')
+@include('partials.custom-cursor')
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance

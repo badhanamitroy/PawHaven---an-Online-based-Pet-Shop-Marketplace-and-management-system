@@ -7,6 +7,7 @@
     <meta name="description" content="{{ Str::limit($listing->description, 160) }}">
 
     @include('partials.favicon')
+    @include('partials.custom-cursor')
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
@@ -35,7 +36,7 @@
                 {{-- Brand Logo --}}
                 <a href="{{ route('public.home') }}" class="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#245C45] rounded-lg">
                     <img
-                        src="{{ str_starts_with((string) \App\Facades\Settings::get('brand.logo_light_path', ''), 'http') ? \App\Facades\Settings::get('brand.logo_light_path') : asset(ltrim((string) \App\Facades\Settings::get('brand.logo_light_path', 'images/pawhaven-logo-green.png'), '/')) }}"
+                        src="{{ \App\Services\MediaManager::logoUrl('green') }}"
                         alt="{{ \App\Facades\Settings::get('brand.name', 'PawHaven') }} Logo"
                         height="48"
                         class="h-12 w-auto max-h-12 max-w-[200px] shrink-0 object-contain transition-transform group-hover:scale-105"
@@ -573,7 +574,7 @@
                 <div class="lg:col-span-2 space-y-4">
                     <a href="{{ route('public.home') }}" class="flex items-center gap-3 group focus-visible:outline-none">
                         <img
-                            src="{{ str_starts_with((string) \App\Facades\Settings::get('brand.logo_dark_path', ''), 'http') ? \App\Facades\Settings::get('brand.logo_dark_path') : asset(ltrim((string) \App\Facades\Settings::get('brand.logo_dark_path', 'images/pawhaven-logo-white.png'), '/')) }}"
+                            src="{{ \App\Services\MediaManager::logoUrl('white') }}"
                             alt="{{ \App\Facades\Settings::get('brand.name', 'PawHaven') }} Logo"
                             height="48"
                             class="h-12 w-auto max-h-12 max-w-[200px] shrink-0 object-contain"

@@ -29,6 +29,7 @@
     <meta name="description" content="{{ Settings::get('brand.meta_description', 'PawHaven is a premium pet marketplace, adoption and rescue community, breed encyclopedia, and pet supplies shop.') }}">
 
     @include('partials.favicon')
+    @include('partials.custom-cursor')
 
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -76,7 +77,7 @@
                 {{-- Brand Logo --}}
                 <a href="{{ route('public.home') }}" class="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#245C45] rounded-lg">
                     <img
-                        src="{{ str_starts_with((string) Settings::get('brand.logo_light_path', ''), 'http') ? Settings::get('brand.logo_light_path') : asset(ltrim((string) Settings::get('brand.logo_light_path', 'images/pawhaven-logo-green.png'), '/')) }}"
+                        src="{{ \App\Services\MediaManager::logoUrl('green') }}"
                         alt="{{ $brandName }} Logo"
                         height="48"
                         class="h-12 w-auto max-h-12 max-w-[200px] shrink-0 object-contain transition-transform group-hover:scale-105"
@@ -238,9 +239,8 @@
         {{-- HERO SECTION --}}
         <section class="relative isolate flex min-h-[520px] items-center overflow-hidden py-10 lg:min-h-[clamp(520px,35vw,700px)] lg:py-14">
             <img
-                src="{{ asset('images/pawhaven-homepage-banner.png') }}"
-                alt=""
-                aria-hidden="true"
+                src="{{ \App\Services\MediaManager::heroBannerUrl() }}"
+                alt="PawHaven Community Banner"
                 class="absolute inset-0 h-full w-full object-cover object-[72%_center] lg:object-center"
                 fetchpriority="high"
             >
@@ -1291,7 +1291,7 @@
                 <div class="lg:col-span-2 space-y-4">
                     <a href="{{ route('public.home') }}" class="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-lg">
                         <img
-                            src="{{ str_starts_with((string) Settings::get('brand.logo_dark_path', ''), 'http') ? Settings::get('brand.logo_dark_path') : asset(ltrim((string) Settings::get('brand.logo_dark_path', 'images/pawhaven-logo-white.png'), '/')) }}"
+                            src="{{ \App\Services\MediaManager::logoUrl('white') }}"
                             alt="{{ $brandName }} Logo"
                             height="48"
                             class="h-12 w-auto max-h-12 max-w-[200px] shrink-0 object-contain transition-transform group-hover:scale-105"

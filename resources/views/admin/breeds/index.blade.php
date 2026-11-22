@@ -3,205 +3,174 @@
 @section('title', 'Breed Encyclopedia')
 
 @section('content')
-<div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold tracking-tight text-[#173F32]">Breed Encyclopedia Profiles</h1>
-        <p class="text-xs text-[#69736B] mt-1">Manage standard breed profiles, physical characteristics, temperament notes, and care information.</p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Add Breed Form --}}
-        <div class="lg:col-span-1">
-            <div class="rounded-2xl border border-[#245C45]/15 bg-white p-5 shadow-sm">
-                <h2 class="text-sm font-bold text-[#173F32] mb-4">Add Breed Profile</h2>
-
-                <form method="POST" action="{{ route('admin.breeds.store') }}" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label for="pet_category_id" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1">
-                            Pet Category <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="pet_category_id"
-                            id="pet_category_id"
-                            required
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        >
-                            <option value="">Select category</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('pet_category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('pet_category_id')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1">
-                            Breed Name <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            value="{{ old('name') }}"
-                            required
-                            placeholder="e.g. Golden Retriever"
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        />
-                        @error('name')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1">
-                            Overview &amp; Temperament
-                        </label>
-                        <textarea
-                            name="description"
-                            id="description"
-                            rows="3"
-                            placeholder="Intelligent, friendly, and devoted..."
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        >{{ old('description') }}</textarea>
-                    </div>
-
-                    <div>
-                        <label for="care_information" class="block text-xs font-bold uppercase tracking-wider text-[#173F32] mb-1">
-                            Care &amp; Exercise Needs
-                        </label>
-                        <textarea
-                            name="care_information"
-                            id="care_information"
-                            rows="3"
-                            placeholder="Requires daily vigorous exercise and regular grooming..."
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        >{{ old('care_information') }}</textarea>
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="w-full rounded-xl bg-[#245C45] py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-[#173F32] transition-colors"
-                    >
-                        Save Breed Profile
-                    </button>
-                </form>
-            </div>
+<main style="flex:1;min-width:0;padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box">
+    {{-- Page Header --}}
+    <header style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+            <div style="font-size:12px;color:#5B6460">Business / Breed Profiles</div>
+            <h1 style="margin:2px 0 0;font-size:24px;font-weight:700;letter-spacing:-.01em;color:#101814">Breed encyclopedia</h1>
+            <div style="font-size:13px;color:#5B6460;margin-top:2px">Manage standard breed profiles, physical characteristics, temperament notes and care information.</div>
         </div>
+        <a class="btn" href="{{ route('public.home') }}" target="_blank" style="background:#fff;border:1px solid #D3D9D5;color:#1B2420">
+            View public store ↗
+        </a>
+    </header>
 
-        {{-- Breeds Table --}}
-        <div class="lg:col-span-2 space-y-4">
+    <div class="cols2">
+        {{-- Left Column: Add Breed Profile Form (Sticky) --}}
+        <section class="card" style="padding:24px;position:sticky;top:20px">
+            <h2 style="margin:0;font-size:16px;font-weight:700;color:#101814">Add breed profile</h2>
+            <p style="margin:2px 0 18px;font-size:13px;color:#5B6460">Profiles appear in the public breed directory.</p>
+
+            <form method="POST" action="{{ route('admin.breeds.store') }}" id="f" novalidate>
+                @csrf
+                <div class="f">
+                    <label for="pet_category_id">Pet category <span style="color:#B42318" aria-hidden="true">*</span></label>
+                    <select class="inp sel" id="pet_category_id" name="pet_category_id" required>
+                        <option value="">Select category</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('pet_category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('pet_category_id')
+                        <div class="err" role="alert">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="f" style="margin-top:16px">
+                    <label for="name">Breed name <span style="color:#B42318" aria-hidden="true">*</span></label>
+                    <input class="inp" id="name" name="name" value="{{ old('name') }}" placeholder="e.g. Golden Retriever" maxlength="80" required autocomplete="off">
+                    @error('name')
+                        <div class="err" role="alert">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="f" style="margin-top:16px">
+                    <label for="description">Overview &amp; temperament</label>
+                    <textarea class="inp" id="description" name="description" placeholder="Intelligent, friendly, and devoted…">{{ old('description') }}</textarea>
+                </div>
+
+                <div class="f" style="margin-top:16px">
+                    <label for="care_information">Care &amp; exercise needs</label>
+                    <textarea class="inp" id="care_information" name="care_information" placeholder="Requires daily vigorous exercise and regular grooming…">{{ old('care_information') }}</textarea>
+                </div>
+
+                <button class="btn" type="submit" style="width:100%;justify-content:center;background:#17603F;color:#fff;border:0;cursor:pointer;margin-top:14px">
+                    Save breed profile
+                </button>
+            </form>
+        </section>
+
+        {{-- Right Column: Filter Bar & Breeds Cards Grid --}}
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
             {{-- Filter Bar --}}
-            <div class="rounded-2xl border border-[#245C45]/15 bg-white p-4 shadow-sm">
-                <form method="GET" action="{{ route('admin.breeds.index') }}" class="flex flex-col sm:flex-row gap-3">
-                    <div class="flex-1">
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ request('search') }}"
-                            placeholder="Search breed by name..."
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        />
-                    </div>
-                    <div class="w-full sm:w-48">
-                        <select
-                            name="category"
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-[#202820] focus:border-[#245C45] focus:outline-none focus:ring-1 focus:ring-[#245C45]"
-                        >
-                            <option value="">All Categories</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <button
-                        type="submit"
-                        class="rounded-xl bg-[#FAF8F2] border border-[#245C45]/20 px-4 py-2 text-xs font-semibold text-[#173F32] hover:bg-[#245C45] hover:text-white transition-colors"
-                    >
+            <form class="card fb" id="ff" method="GET" action="{{ route('admin.breeds.index') }}" role="search">
+                <div class="f">
+                    <label for="q">Search</label>
+                    <input class="inp" id="q" name="search" type="search" value="{{ request('search') }}" placeholder="Search breed by name">
+                </div>
+                <div class="f">
+                    <label for="fc">Category</label>
+                    <select class="inp sel" id="fc" name="category">
+                        <option value="">All categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn" type="submit" style="background:#17603F;color:#fff;border:0;cursor:pointer">
                         Filter
                     </button>
                     @if(request()->hasAny(['search', 'category']))
-                        <a href="{{ route('admin.breeds.index') }}" class="text-xs text-[#69736B] hover:underline self-center">
+                        <a class="btn" href="{{ route('admin.breeds.index') }}" style="background:#fff;border:1px solid #D3D9D5;color:#1B2420">
                             Reset
                         </a>
                     @endif
-                </form>
+                </div>
+            </form>
+
+            <div style="font-size:13px;color:#5B6460" id="cnt" aria-live="polite">
+                {{ $breeds->total() }} {{ $breeds->total() === 1 ? 'breed profile' : 'breed profiles' }}
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-[#245C45]/15 bg-white shadow-sm">
-                @if($breeds->isEmpty())
-                    <div class="p-8 text-center text-xs text-[#69736B]">
-                        No breed profiles found. Add the first breed using the form on the left.
+            @if($breeds->isEmpty())
+                <section class="card" id="empty" style="padding:48px 24px;text-align:center">
+                    <div style="font-weight:600;font-size:15px;color:#101814">
+                        {{ request()->hasAny(['search', 'category']) ? 'No matching breed profiles' : 'No breed profiles found' }}
                     </div>
-                @else
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="border-b border-gray-100 bg-[#FAF8F2] text-[11px] font-bold uppercase tracking-wider text-[#69736B]">
-                                <tr>
-                                    <th class="py-3.5 pl-6 pr-3">Breed</th>
-                                    <th class="px-3 py-3.5">Category</th>
-                                    <th class="px-3 py-3.5 text-center">Listings</th>
-                                    <th class="py-3.5 pl-3 pr-6 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($breeds as $breed)
-                                    <tr class="hover:bg-gray-50/70 transition-colors">
-                                        <td class="py-3.5 pl-6 pr-3">
-                                            <div class="font-bold text-[#173F32]">{{ $breed->name }}</div>
-                                            @if($breed->description)
-                                                <div class="text-[11px] text-[#69736B] line-clamp-1">{{ $breed->description }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-3 py-3.5">
-                                            <span class="rounded bg-gray-100 px-2 py-0.5 text-gray-700">
-                                                {{ $breed->petCategory?->name }}
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-3.5 text-center font-bold text-[#245C45]">
-                                            {{ $breed->listings_count }}
-                                        </td>
-                                        <td class="py-3.5 pl-3 pr-6 text-right">
-                                            <form
-                                                method="POST"
-                                                action="{{ route('admin.breeds.destroy', $breed) }}"
-                                                onsubmit="return confirm('Delete breed \'{{ $breed->name }}\'?');"
-                                                class="inline"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-                                                <button
-                                                    type="submit"
-                                                    class="rounded p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div style="font-size:13px;color:#5B6460;margin-top:4px">
+                        {{ request()->hasAny(['search', 'category']) ? 'Try a different search, or reset the filters.' : 'Add the first breed using the form on the left.' }}
                     </div>
+                </section>
+            @else
+                <div class="grid" id="grid">
+                    @foreach($breeds as $breed)
+                        <article class="card bc">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                                <div>
+                                    <span class="cp">{{ $breed->petCategory?->name ?? 'General' }}</span>
+                                    <h3 style="margin:8px 0 0;font-size:16px;font-weight:700;color:#101814">{{ $breed->name }}</h3>
+                                    <div style="font-size:12px;color:#5B6460;margin-top:2px">
+                                        {{ $breed->listings_count }} {{ $breed->listings_count === 1 ? 'listing' : 'listings' }}
+                                    </div>
+                                </div>
+                                <form
+                                    method="POST"
+                                    action="{{ route('admin.breeds.destroy', $breed) }}"
+                                    onsubmit="return confirm('Delete breed \'{{ $breed->name }}\'?');"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rm" aria-label="Delete {{ $breed->name }}">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
 
-                    @if($breeds->hasPages())
-                        <div class="border-t border-gray-100 p-4">
-                            {{ $breeds->links() }}
-                        </div>
-                    @endif
+                            @if($breed->description)
+                                <div style="margin-top:4px">
+                                    <div class="k">Overview &amp; temperament</div>
+                                    <p>{{ $breed->description }}</p>
+                                </div>
+                            @endif
+
+                            @if($breed->care_information)
+                                <div style="margin-top:4px">
+                                    <div class="k">Care &amp; exercise</div>
+                                    <p>{{ $breed->care_information }}</p>
+                                </div>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+
+                @if($breeds->hasPages())
+                    <div style="padding:16px 0">
+                        {{ $breeds->links() }}
+                    </div>
                 @endif
-            </div>
+            @endif
         </div>
     </div>
-</div>
-@endsection
+</main>
 
+<style>
+.cols2 { display:grid; grid-template-columns:380px minmax(0,1fr); gap:20px; align-items:start; }
+@media(max-width:1000px){ .cols2 { grid-template-columns:1fr; } }
+.fb { display:grid; grid-template-columns:minmax(0,1fr) 200px auto; gap:12px; align-items:end; padding:16px 20px; }
+@media(max-width:700px){ .fb { grid-template-columns:1fr; } }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+.bc { padding:18px; display:flex; flex-direction:column; gap:10px; }
+.cp { display:inline-flex; padding:3px 10px; border-radius:999px; background:#E3F3E9; color:#14573A; font-size:12px; font-weight:600; }
+.bc h3 { margin:0; font-size:16px; color:#101814; }
+.bc .k { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#5B6460; font-weight:600; margin-bottom:2px; }
+.bc p { margin:0; font-size:13.5px; line-height:1.55; color:#3B4540; }
+.rm { min-height:36px; padding:0 10px; border:0; background:transparent; color:#9B1C12; font:inherit; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; }
+.rm:hover { background:#FDECEA; }
+</style>
+@endsection

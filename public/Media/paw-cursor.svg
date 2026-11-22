@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Soft drop shadow for contrast against all surfaces -->
+  <defs>
+    <filter id="paw-shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#paw-shadow)">
+    <!-- Central main metacarpal pad -->
+    <path d="M16 14C12.5 14 10 17 10.8 20.8C11.3 23.2 13.5 25 16 25C18.5 25 20.7 23.2 21.2 20.8C22 17 19.5 14 16 14Z" fill="#17603F" stroke="#FFFFFF" stroke-width="1.2" stroke-linejoin="round"/>
+    <!-- Top-left toe pad (pointer hotspot at 5, 5) -->
+    <ellipse cx="7.5" cy="11.5" rx="2.5" ry="3.5" transform="rotate(-25 7.5 11.5)" fill="#17603F" stroke="#FFFFFF" stroke-width="1.2"/>
+    <!-- Center-left toe pad -->
+    <ellipse cx="12.5" cy="8" rx="2.6" ry="4" transform="rotate(-10 12.5 8)" fill="#17603F" stroke="#FFFFFF" stroke-width="1.2"/>
+    <!-- Center-right toe pad -->
+    <ellipse cx="19.5" cy="8" rx="2.6" ry="4" transform="rotate(10 19.5 8)" fill="#17603F" stroke="#FFFFFF" stroke-width="1.2"/>
+    <!-- Top-right toe pad -->
+    <ellipse cx="24.5" cy="11.5" rx="2.5" ry="3.5" transform="rotate(25 24.5 11.5)" fill="#17603F" stroke="#FFFFFF" stroke-width="1.2"/>
+  </g>
+</svg>

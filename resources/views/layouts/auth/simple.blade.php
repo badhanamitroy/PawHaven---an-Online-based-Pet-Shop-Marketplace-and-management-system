@@ -6,8 +6,7 @@
     <body class="min-h-full font-sans antialiased bg-[#FAF8F2] text-[#202820]">
         @php
             $brandName = \App\Facades\Settings::get('brand.name', config('app.name', 'PawHaven'));
-            $rawLogo = \App\Facades\Settings::get('brand.logo_light_path', 'images/pawhaven-logo-green.png');
-            $greenLogo = str_starts_with((string) $rawLogo, 'http') ? $rawLogo : '/' . ltrim((string) $rawLogo, '/');
+            $greenLogo = \App\Services\MediaManager::logoUrl('green');
         @endphp
 
         <div class="flex min-h-screen flex-col items-center justify-center p-6 sm:p-10">

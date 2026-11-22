@@ -6,10 +6,8 @@
     <body class="min-h-full font-sans antialiased bg-[#FAF8F2] text-[#202820]">
         @php
             $brandName = \App\Facades\Settings::get('brand.name', config('app.name', 'PawHaven'));
-            $rawWhite = \App\Facades\Settings::get('brand.logo_dark_path', 'images/pawhaven-logo-white.png');
-            $whiteLogo = str_starts_with((string) $rawWhite, 'http') ? $rawWhite : '/' . ltrim((string) $rawWhite, '/');
-            $rawGreen = \App\Facades\Settings::get('brand.logo_light_path', 'images/pawhaven-logo-green.png');
-            $greenLogo = str_starts_with((string) $rawGreen, 'http') ? $rawGreen : '/' . ltrim((string) $rawGreen, '/');
+            $whiteLogo = \App\Services\MediaManager::logoUrl('white');
+            $greenLogo = \App\Services\MediaManager::logoUrl('green');
         @endphp
 
         <div class="relative min-h-screen flex flex-col lg:flex-row">

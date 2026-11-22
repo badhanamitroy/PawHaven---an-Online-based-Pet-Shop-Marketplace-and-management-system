@@ -5,21 +5,28 @@ namespace App\Http\Controllers\Admin;
 use App\Facades\Settings;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
+use App\Services\MediaManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class BrandIdentityController extends Controller
 {
+    /**
+     * Display the Brand Identity and Media Management settings page.
+     */
     public function index(): View
     {
         return view('admin.brand.index', [
             'settings' => Settings::all(),
+            'mediaAssets' => MediaManager::allAssetsDetails(),
         ]);
     }
 
+    /**
+     * Update brand configuration, social links, colors, custom paw cursor, and optional file replacements.
+     */
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -35,9 +42,12 @@ class BrandIdentityController extends Controller
             'brand_social_instagram' => ['nullable', 'url', 'max:255'],
             'brand_social_x' => ['nullable', 'url', 'max:255'],
             'brand_meta_description' => ['required', 'string', 'max:500'],
-            'logo_light' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048', 'dimensions:max_width=3000,max_height=3000'],
-            'logo_dark' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048', 'dimensions:max_width=3000,max_height=3000'],
-            'favicon' => ['nullable', 'file', 'mimes:ico,png', 'max:512'],
+            'custom_paw_cursor' => ['nullable', 'boolean'],
+            'hero_banner' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:10240'],
+            'logo_light' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:3072'],
+            'logo_dark' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:3072'],
+            'logo_navy' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:3072'],
+            'favicon' => ['nullable', 'file', 'mimes:png,ico,svg', 'max:2048'],
         ]);
 
         $settingsToSave = [
@@ -53,79 +63,98 @@ class BrandIdentityController extends Controller
             'brand.social_instagram' => $validated['brand_social_instagram'] ?? '',
             'brand.social_x' => $validated['brand_social_x'] ?? '',
             'brand.meta_description' => $validated['brand_meta_description'],
+            'brand.custom_paw_cursor' => $request->boolean('custom_paw_cursor'),
         ];
 
+        $replacedAssets = [];
+
         try {
-            if ($lightLogoPath = $this->handleFileUpload($request, 'logo_light', 'brand.logo_light_path')) {
-                $settingsToSave['brand.logo_light_path'] = $lightLogoPath;
+            // Process canonical asset uploads if submitted
+            if ($request->hasFile('hero_banner')) {
+                MediaManager::replaceCanonicalAsset('hero_banner', $request->file('hero_banner'));
+                $replacedAssets[] = 'Hero Banner';
             }
 
-            if ($darkLogoPath = $this->handleFileUpload($request, 'logo_dark', 'brand.logo_dark_path')) {
-                $settingsToSave['brand.logo_dark_path'] = $darkLogoPath;
+            if ($request->hasFile('logo_light')) {
+                MediaManager::replaceCanonicalAsset('logo_green', $request->file('logo_light'));
+                $replacedAssets[] = 'Primary Green Logo';
             }
 
-            if ($faviconPath = $this->handleFileUpload($request, 'favicon', 'brand.favicon_path')) {
-                $settingsToSave['brand.favicon_path'] = $faviconPath;
+            if ($request->hasFile('logo_dark')) {
+                MediaManager::replaceCanonicalAsset('logo_white', $request->file('logo_dark'));
+                $replacedAssets[] = 'Dark/White Logo';
+            }
+
+            if ($request->hasFile('logo_navy')) {
+                MediaManager::replaceCanonicalAsset('logo_navy', $request->file('logo_navy'));
+                $replacedAssets[] = 'Navy Blue Logo';
+            }
+
+            if ($request->hasFile('favicon')) {
+                MediaManager::replaceCanonicalAsset('logo_icon', $request->file('favicon'));
+                $replacedAssets[] = 'Brand Icon & Favicon';
             }
         } catch (\Throwable $e) {
-            Log::error('Branding file upload failed.', [
+            Log::error('Canonical media replacement failed during brand settings update.', [
                 'exception_type' => get_class($e),
+                'message' => $e->getMessage(),
             ]);
 
             return back()->withInput()->withErrors([
-                'logo_light' => 'Failed to store uploaded branding assets. Please try again.',
+                'media_upload' => 'Failed to store uploaded media assets: ' . $e->getMessage(),
             ]);
         }
 
+        // Persist brand settings
         Settings::setMany($settingsToSave, 'brand');
+
+        $message = 'Brand identity settings updated successfully.';
+        if (! empty($replacedAssets)) {
+            $message .= ' Replaced canonical files: ' . implode(', ', $replacedAssets) . '.';
+        }
 
         AdminAuditLog::record(
             'brand.update',
-            'Updated brand identity and logo settings.',
-            ['name' => $validated['brand_name']]
+            'Updated brand identity settings, cursor preference, and media assets.',
+            [
+                'name' => $validated['brand_name'],
+                'custom_paw_cursor' => $request->boolean('custom_paw_cursor'),
+                'replaced_assets' => $replacedAssets,
+            ]
         );
 
-        return redirect()->route('admin.brand.index')->with('success', 'Brand identity settings updated successfully.');
+        return redirect()->route('admin.brand.index')->with('success', $message);
     }
 
     /**
-     * Store an uploaded branding asset securely and clean up any previous managed file.
+     * Dedicated single-asset canonical replacement endpoint.
      */
-    protected function handleFileUpload(Request $request, string $field, string $settingKey): ?string
+    public function replaceMedia(Request $request): RedirectResponse
     {
-        if (! $request->hasFile($field)) {
-            return null;
-        }
+        $allowedTargets = implode(',', array_keys(MediaManager::CANONICAL_ASSETS));
 
-        $file = $request->file($field);
-        $storedPath = $file->store('branding', 'public');
+        $validated = $request->validate([
+            'target' => ['required', 'string', "in:{$allowedTargets}"],
+            'media_file' => ['required', 'file'],
+        ]);
 
-        if ($storedPath === false) {
-            throw new \RuntimeException("Failed to store uploaded {$field}.");
-        }
+        try {
+            $result = MediaManager::replaceCanonicalAsset(
+                $validated['target'],
+                $request->file('media_file')
+            );
 
-        // Delete old application-managed file if one exists
-        $currentPath = Settings::get($settingKey);
-        if ($currentPath && is_string($currentPath)) {
-            $this->cleanupOldBrandingFile($currentPath);
-        }
+            AdminAuditLog::record(
+                'brand.media_replace',
+                "Replaced canonical media asset: {$validated['target']}",
+                ['target' => $validated['target'], 'path' => $result['path']]
+            );
 
-        return '/storage/'.ltrim($storedPath, '/');
-    }
+            return redirect()->route('admin.brand.index')->with('success', $result['message']);
+        } catch (\Throwable $e) {
+            Log::error("Failed to replace media asset [{$validated['target']}]: " . $e->getMessage());
 
-    /**
-     * Safely delete a previously uploaded branding file from the public disk if managed.
-     */
-    protected function cleanupOldBrandingFile(string $path): void
-    {
-        $parsed = parse_url($path, PHP_URL_PATH);
-        $target = is_string($parsed) ? $parsed : $path;
-
-        if (preg_match('#(?:^|/)storage/(branding/[A-Za-z0-9_.\-]+)$#', $target, $matches) === 1) {
-            $storageRelative = $matches[1];
-            if (Storage::disk('public')->exists($storageRelative)) {
-                Storage::disk('public')->delete($storageRelative);
-            }
+            return redirect()->route('admin.brand.index')->with('error', $e->getMessage());
         }
     }
 }
